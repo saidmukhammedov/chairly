@@ -1,0 +1,10 @@
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  testMatch: ['**/tests/**/*.test.ts'],
+  testTimeout: 20000,
+  verbose: true,
+  moduleNameMapper: {
+    '^@chairly/shared$': '<rootDir>/../../packages/shared/src/index.ts',
+  },
+};

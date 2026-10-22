@@ -1,0 +1,33 @@
+{
+  "name": "chairly",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chairly — Full-Stack Barbershop Booking Platform",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "dev:mobile": "npm run start --workspace=apps/mobile",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "db:migrate": "npm run db:migrate --workspace=apps/api",
+    "db:seed": "npm run db:seed --workspace=apps/api",
+    "db:studio": "npm run db:studio --workspace=apps/api"
+  },
+  "keywords": [
+    "barbershop",
+    "booking",
+    "react-native",
+    "expo",
+    "react",
+    "express",
+    "prisma",
+    "postgresql"
+  ],
+  "author": "Chairly Engineering",
+  "license": "UNLICENSED"
+}
