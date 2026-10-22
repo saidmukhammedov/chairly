@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: chairly-api
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install && npm run build --workspace=packages/shared && npm run db:generate --workspace=apps/api && npm run build --workspace=apps/api
+    startCommand: npm run start --workspace=apps/api
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: DATABASE_URL
+        value: postgresql://postgres.nfkqblsxatrntkdmsppi:Akbarali001%21@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres?schema=public
+      - key: JWT_SECRET
+        value: chairly_production_jwt_secret_key_98372619472938
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: DEFAULT_TIMEZONE
+        value: Asia/Tashkent
+      - key: DEFAULT_CURRENCY
+        value: UZS
