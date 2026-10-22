@@ -4,15 +4,9 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: npm install && npm run build --workspace=packages/shared && npm run db:generate --workspace=apps/api && npm run build --workspace=apps/api
-    startCommand: npm run start --workspace=apps/api
+    buildCommand: npm install --include=dev && npm run build --workspace=packages/shared && npx prisma generate --schema=apps/api/prisma/schema.prisma && npm run build --workspace=apps/api
+    startCommand: node apps/api/dist/index.js
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
-      - key: CORS_ORIGIN
-        value: "*"
       - key: DATABASE_URL
         value: postgresql://postgres.nfkqblsxatrntkdmsppi:Akbarali001%21@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres?schema=public
       - key: JWT_SECRET
@@ -23,3 +17,5 @@ services:
         value: Asia/Tashkent
       - key: DEFAULT_CURRENCY
         value: UZS
+      - key: NODE_ENV
+        value: production
