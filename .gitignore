@@ -11,6 +11,7 @@ dist/
 build/
 .expo/
 web-build/
+!packages/shared/dist/
 
 # Environment files
 .env

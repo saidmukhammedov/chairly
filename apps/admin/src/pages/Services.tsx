@@ -273,7 +273,7 @@ export const Services: React.FC = () => {
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full bg-chairly-bg/50 border border-chairly-border rounded-xl px-3.5 py-2 text-sm text-chairly-dark focus:bg-white focus:outline-none focus:ring-2 focus:ring-chairly-terracotta-500/20"
               >
-                {SERVICE_CATEGORIES.filter((c) => c !== 'All').map((cat) => (
+                {SERVICE_CATEGORIES.filter((c: any) => c !== 'All').map((cat: any) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>

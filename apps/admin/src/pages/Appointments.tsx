@@ -510,7 +510,7 @@ export const Appointments: React.FC = () => {
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {currentTransitions.map((status) => (
+                  {currentTransitions.map((status: any) => (
                     <button
                       key={status}
                       onClick={() => {

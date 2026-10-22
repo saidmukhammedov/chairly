@@ -73,7 +73,7 @@ export const Settings: React.FC = () => {
 
       // Build working hours array for all 7 days
       const hoursMap = new Map(res.workingHours?.map((h) => [h.dayOfWeek, h]));
-      const fullHours = DAYS_OF_WEEK.map((d) => {
+      const fullHours = DAYS_OF_WEEK.map((d: any) => {
         const existing = hoursMap.get(d.day);
         return {
           dayOfWeek: d.day,
@@ -356,7 +356,7 @@ export const Settings: React.FC = () => {
 
           <div className="divide-y divide-chairly-border border border-chairly-border rounded-2xl overflow-hidden">
             {workingHours.map((wh, index) => {
-              const dayName = DAYS_OF_WEEK.find((d) => d.day === wh.dayOfWeek)?.name || 'Day';
+              const dayName = DAYS_OF_WEEK.find((d: any) => d.day === wh.dayOfWeek)?.name || 'Day';
               return (
                 <div
                   key={wh.dayOfWeek}

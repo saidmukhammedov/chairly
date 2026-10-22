@@ -96,7 +96,7 @@ export const Staff: React.FC = () => {
   const openScheduleModal = (barber: BarberItem) => {
     setScheduleBarber(barber);
     const existing = barber.schedules || [];
-    const draft = DAYS_OF_WEEK.map((d) => {
+    const draft = DAYS_OF_WEEK.map((d: any) => {
       const found = existing.find((s) => s.dayOfWeek === d.day);
       return {
         dayOfWeek: d.day,
@@ -419,7 +419,7 @@ export const Staff: React.FC = () => {
 
           <div className="divide-y divide-chairly-border border border-chairly-border rounded-2xl overflow-hidden">
             {scheduleDraft.map((item, index) => {
-              const dayName = DAYS_OF_WEEK.find((d) => d.day === item.dayOfWeek)?.name || 'Day';
+              const dayName = DAYS_OF_WEEK.find((d: any) => d.day === item.dayOfWeek)?.name || 'Day';
               return (
                 <div
                   key={item.dayOfWeek}
