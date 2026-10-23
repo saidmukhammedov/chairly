@@ -121,13 +121,23 @@ export const ApplyBusiness: React.FC = () => {
     <div className="min-h-screen bg-[#FAFAFA] text-zinc-950 py-8 px-4 sm:px-6 lg:px-8">
       {/* Top Navbar */}
       <div className="max-w-4xl mx-auto flex items-center justify-between mb-8 pb-4 border-b border-zinc-200/80">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 hover:text-zinc-950 transition-colors uppercase tracking-wider"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          {t('common.back')}
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 hover:text-zinc-950 transition-colors uppercase tracking-wider"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            {t('common.back')}
+          </Link>
+          <div className="h-4 w-px bg-zinc-200" />
+          <Link
+            to="/"
+            className="text-sm font-black tracking-[0.25em] uppercase text-black hover:text-zinc-600 transition-colors"
+            title="CHAIRLY - Asosiy sahifa"
+          >
+            CHAIRLY
+          </Link>
+        </div>
         <div className="flex items-center gap-3">
           <LanguageSelector />
           <Link

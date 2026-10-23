@@ -60,13 +60,15 @@ export const Register: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="w-10 h-10 rounded-md bg-zinc-950 text-white flex items-center justify-center font-bold text-base mx-auto mb-3 tracking-tighter">
-            CH
-          </div>
-          <div className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold mb-1">
-            CHAIRLY
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950">
+          <Link to="/" className="inline-block group focus:outline-hidden" title="CHAIRLY - Asosiy sahifa">
+            <div className="w-10 h-10 rounded-md bg-zinc-950 group-hover:bg-zinc-800 text-white flex items-center justify-center font-bold text-base mx-auto mb-3 tracking-tighter transition-colors">
+              CH
+            </div>
+            <div className="text-[10px] uppercase tracking-widest text-zinc-400 group-hover:text-zinc-700 font-bold mb-1 transition-colors">
+              CHAIRLY
+            </div>
+          </Link>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 mt-1">
             {t('auth.createAccount')}
           </h1>
           <p className="text-xs text-zinc-500 mt-1">

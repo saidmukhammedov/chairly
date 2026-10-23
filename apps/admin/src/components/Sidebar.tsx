@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Calendar,
@@ -36,14 +36,14 @@ export const Sidebar: React.FC = () => {
     <aside className="w-64 bg-white border-r border-zinc-200 flex flex-col h-screen fixed left-0 top-0 z-30 antialiased">
       {/* Brand Header */}
       <div className="p-5 border-b border-zinc-200 flex items-center justify-between">
-        <div>
-          <h1 className="text-sm font-black tracking-[0.25em] uppercase text-black">
+        <Link to="/" className="group block focus:outline-hidden" title="CHAIRLY - Asosiy sahifa">
+          <h1 className="text-sm font-black tracking-[0.25em] uppercase text-black group-hover:text-zinc-600 transition-colors">
             CHAIRLY
           </h1>
           <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-semibold mt-0.5">
             {isPlatformOwner ? 'Platform Owner' : 'Shop Management'}
           </p>
-        </div>
+        </Link>
         {isPlatformOwner && (
           <span className="text-[9px] font-bold tracking-wider uppercase text-amber-900 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-sm">
             👑 Owner

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Calendar,
   Clock,
@@ -270,20 +271,32 @@ export const CustomerPortal: React.FC = () => {
     return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.city.toLowerCase().includes(q);
   });
 
+  const handleHomeClick = () => {
+    setActiveTab('shops');
+    setSelectedShop(null);
+    setMobileDrawerOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-chairly-bg flex flex-col antialiased">
       {/* Sleek, Minimal, Razor-Sharp Header */}
       <header className="bg-white/95 backdrop-blur-md border-b border-zinc-200 sticky top-0 z-40 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           {/* Brand */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm sm:text-base font-black tracking-[0.25em] uppercase text-black">
+          <Link
+            to="/"
+            onClick={handleHomeClick}
+            className="flex items-center gap-3 group focus:outline-hidden"
+            title="CHAIRLY - Asosiy sahifa"
+          >
+            <span className="text-sm sm:text-base font-black tracking-[0.25em] uppercase text-black group-hover:text-zinc-600 transition-colors">
               CHAIRLY
             </span>
             <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-zinc-100 text-zinc-600 border border-zinc-200">
               Mijoz
             </span>
-          </div>
+          </Link>
 
           {/* Right Header Actions: Notification Bell + Hamburger Menu */}
           <div className="flex items-center gap-2">
@@ -313,9 +326,14 @@ export const CustomerPortal: React.FC = () => {
           <div className="relative ml-auto w-5/6 max-w-xs bg-white h-full shadow-2xl flex flex-col z-10 border-l border-zinc-200 animate-slide-left">
             {/* Header */}
             <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-              <span className="font-black text-sm tracking-[0.25em] uppercase text-black">
+              <Link
+                to="/"
+                onClick={handleHomeClick}
+                className="font-black text-sm tracking-[0.25em] uppercase text-black hover:text-zinc-600 transition-colors"
+                title="CHAIRLY - Asosiy sahifa"
+              >
                 CHAIRLY
-              </span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(false)}

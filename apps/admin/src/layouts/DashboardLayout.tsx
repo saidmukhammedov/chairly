@@ -95,9 +95,14 @@ export const DashboardLayout: React.FC = () => {
       {/* Mobile Top Header (Sleek, Minimal, Sharp) */}
       <header className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-200 px-4 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-2.5">
-          <span className="text-sm font-black tracking-[0.2em] uppercase text-black">
+          <Link
+            to="/"
+            onClick={() => setMobileDrawerOpen(false)}
+            className="text-sm font-black tracking-[0.2em] uppercase text-black hover:text-zinc-600 transition-colors"
+            title="CHAIRLY - Asosiy sahifa"
+          >
             CHAIRLY
-          </span>
+          </Link>
           {isPlatformOwner ? (
             <span className="text-[9px] font-bold tracking-wider uppercase text-amber-900 bg-amber-50 px-2 py-0.5 rounded-sm border border-amber-200">
               Platform Owner
@@ -136,9 +141,14 @@ export const DashboardLayout: React.FC = () => {
           <div className="relative ml-auto w-5/6 max-w-xs bg-white h-full shadow-2xl flex flex-col z-10 border-l border-zinc-200 animate-slide-left">
             {/* Drawer Header */}
             <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-              <span className="font-black text-sm tracking-[0.2em] uppercase text-black">
+              <Link
+                to="/"
+                onClick={() => setMobileDrawerOpen(false)}
+                className="font-black text-sm tracking-[0.2em] uppercase text-black hover:text-zinc-600 transition-colors"
+                title="CHAIRLY - Asosiy sahifa"
+              >
                 CHAIRLY
-              </span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(false)}
