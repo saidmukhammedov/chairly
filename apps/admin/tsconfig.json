@@ -21,5 +21,5 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "../../packages/shared/src"]
+  "include": ["src", "api", "../../packages/shared/src"]
 }
