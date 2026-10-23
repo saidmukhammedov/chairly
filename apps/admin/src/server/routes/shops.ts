@@ -430,6 +430,10 @@ router.get('/', optionalAuthenticate, async (req: Request, res: Response, next) 
       isFavorited: currentUserId ? (shop.favorites?.length || 0) > 0 : false,
     }));
 
+    if (!currentUserId) {
+      res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=59');
+    }
+
     res.json(formatted);
   } catch (err) {
     next(err);
@@ -469,6 +473,10 @@ router.get('/:idOrSlug', optionalAuthenticate, async (req: Request, res: Respons
     }
 
     const startingPrice = shop.services.length > 0 ? shop.services[0].price : 0;
+
+    if (!currentUserId) {
+      res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=59');
+    }
 
     res.json({
       id: shop.id,

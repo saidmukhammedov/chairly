@@ -66,7 +66,8 @@ var config = {
 };
 
 // src/server/db.ts
-var prisma = new PrismaClient({
+var globalForPrisma = globalThis;
+var prisma = globalForPrisma.prisma ?? new PrismaClient({
   datasources: {
     db: {
       url: config.databaseUrl
@@ -74,6 +75,7 @@ var prisma = new PrismaClient({
   },
   log: ["warn", "error"]
 });
+globalForPrisma.prisma = prisma;
 
 // src/server/middlewares/auth.ts
 import jwt from "jsonwebtoken";
@@ -1039,6 +1041,9 @@ router2.get("/", optionalAuthenticate, async (req, res, next) => {
       reviewCount: 48,
       isFavorited: currentUserId ? (shop.favorites?.length || 0) > 0 : false
     }));
+    if (!currentUserId) {
+      res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=59");
+    }
     res.json(formatted);
   } catch (err) {
     next(err);
@@ -1071,6 +1076,9 @@ router2.get("/:idOrSlug", optionalAuthenticate, async (req, res, next) => {
       throw new AppError("Barbershop not found", 404);
     }
     const startingPrice = shop.services.length > 0 ? shop.services[0].price : 0;
+    if (!currentUserId) {
+      res.setHeader("Cache-Control", "public, s-maxage=15, stale-while-revalidate=59");
+    }
     res.json({
       id: shop.id,
       name: shop.name,

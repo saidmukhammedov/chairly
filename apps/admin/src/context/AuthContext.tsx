@@ -90,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     localStorage.removeItem('chairly_admin_token');
     localStorage.removeItem('chairly_active_shop');
+    api.clearCache();
     setUser(null);
     setMemberships([]);
     setCurrentShopId(null);

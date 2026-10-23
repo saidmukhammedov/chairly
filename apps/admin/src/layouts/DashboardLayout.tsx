@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { Outlet, Navigate, NavLink, useLocation, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -17,10 +17,14 @@ import {
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
-import { CustomerPortal } from '../pages/CustomerPortal';
 import { useTranslation } from '../i18n';
 import { LanguageSelector } from '../i18n/LanguageSelector';
 import { NotificationsBell } from '../components/NotificationsBell';
+import { PageLoader } from '../components/PageLoader';
+
+const CustomerPortal = lazy(() =>
+  import('../pages/CustomerPortal').then((m) => ({ default: m.CustomerPortal }))
+);
 
 export const DashboardLayout: React.FC = () => {
   const { user, isLoading, currentShopId, memberships, switchShop, logout, currentMembership } = useAuth();
@@ -29,14 +33,7 @@ export const DashboardLayout: React.FC = () => {
   const location = useLocation();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-chairly-bg flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-semibold tracking-wider uppercase text-zinc-500">{t('common.loading')}</p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!user) {
@@ -45,7 +42,11 @@ export const DashboardLayout: React.FC = () => {
 
   // If logged in as customer, show dedicated customer portal
   if (user.role === 'CUSTOMER') {
-    return <CustomerPortal />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <CustomerPortal />
+      </Suspense>
+    );
   }
 
   const isPlatformOwner = user.email === 'admin@chairly.app' || (user.role === 'OWNER' && user.email === 'admin@chairly.app');
