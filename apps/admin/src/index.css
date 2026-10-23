@@ -3,25 +3,30 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    border-color: #E4E4E7;
+  }
   body {
-    background-color: #FBF9F5;
-    color: #1A1A1A;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background-color: #FAFAFA;
+    color: #09090B;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Custom scrollbars */
+/* Custom sleek scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D8D2C7;
-  border-radius: 9999px;
+  background: #D4D4D8;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #B8B0A2;
+  background: #A1A1AA;
 }

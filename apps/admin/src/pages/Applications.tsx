@@ -125,10 +125,10 @@ export const Applications: React.FC = () => {
 
   if (!isPlatformOwner) {
     return (
-      <div className="p-12 text-center bg-white rounded-2xl border border-chairly-border">
-        <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
-        <h2 className="text-lg font-bold text-chairly-dark">Ruxsat cheklangan</h2>
-        <p className="text-xs text-chairly-muted mt-1">Ushbu sahifaga faqat platforma egasi kira oladi.</p>
+      <div className="p-12 text-center bg-white rounded-lg border border-zinc-200">
+        <AlertCircle className="w-10 h-10 text-rose-500 mx-auto mb-3" />
+        <h2 className="text-base font-bold text-zinc-950">Ruxsat cheklangan</h2>
+        <p className="text-xs text-zinc-500 mt-1">Ushbu sahifaga faqat platforma egasi kira oladi.</p>
       </div>
     );
   }
@@ -147,33 +147,33 @@ export const Applications: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-zinc-200">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-chairly-dark">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950">
             {t('ownerApplications.title')}
           </h2>
-          <p className="text-sm text-chairly-muted mt-0.5">
+          <p className="text-xs text-zinc-500 mt-0.5">
             {t('ownerApplications.subtitle')}
           </p>
         </div>
         <button
           onClick={fetchApplications}
-          className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-chairly-border hover:bg-chairly-panel rounded-xl text-xs font-semibold text-chairly-dark shadow-2xs transition-colors"
+          className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-md text-xs font-semibold text-zinc-950 shadow-xs transition-colors"
         >
-          <RefreshCw className="w-3.5 h-3.5 text-chairly-muted" />
+          <RefreshCw className="w-3.5 h-3.5 text-zinc-500" />
           {t('common.refresh')}
         </button>
       </div>
 
       {actionSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm font-medium flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-emerald-800 text-xs font-medium flex items-center gap-2 animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           {actionSuccess}
         </div>
       )}
 
       {/* Filter Tabs & Search */}
-      <div className="bg-white p-4 rounded-2xl border border-chairly-border shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-lg border border-zinc-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           <button
             onClick={() => setActiveFilter('PENDING')}
@@ -238,22 +238,22 @@ export const Applications: React.FC = () => {
 
       {/* Applications List */}
       {isLoading ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-chairly-border">
-          <div className="w-8 h-8 border-3 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm font-medium text-chairly-muted">{t('common.loading')}</p>
+        <div className="p-16 text-center bg-white rounded-lg border border-zinc-200">
+          <div className="w-8 h-8 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs font-medium text-zinc-500">{t('common.loading')}</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-chairly-border">
-          <FileText className="w-12 h-12 text-chairly-subtle mx-auto mb-3 opacity-40" />
-          <h3 className="text-base font-bold text-chairly-dark mb-1">
+        <div className="p-16 text-center bg-white rounded-lg border border-zinc-200">
+          <FileText className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
+          <h3 className="text-sm font-bold text-zinc-950 mb-1">
             {t('ownerApplications.emptyState')}
           </h3>
-          <p className="text-xs text-chairly-muted max-w-sm mx-auto">
+          <p className="text-xs text-zinc-500 max-w-sm mx-auto">
             {t('ownerApplications.emptyStateDesc')}
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-chairly-border shadow-2xs overflow-hidden">
+        <div className="bg-white rounded-lg border border-zinc-200/80 shadow-xs overflow-hidden">
           {/* Mobile Card View (< sm) */}
           <div className="sm:hidden divide-y divide-chairly-border">
             {filtered.map((app) => (
@@ -406,19 +406,19 @@ export const Applications: React.FC = () => {
         >
           <div className="space-y-6">
             {/* Status Header */}
-            <div className="flex items-center justify-between p-4 bg-chairly-panel rounded-2xl border border-chairly-border">
+            <div className="flex items-center justify-between p-4 bg-zinc-50 rounded-lg border border-zinc-200">
               <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-chairly-muted">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
                   {t('common.status')}
                 </span>
                 <div className="mt-1">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[11px] font-semibold uppercase tracking-wider ${
                       selectedApp.status === 'APPROVED'
-                        ? 'bg-emerald-100 text-emerald-800'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         : selectedApp.status === 'REJECTED'
-                        ? 'bg-rose-100 text-rose-800'
-                        : 'bg-amber-100 text-amber-800'
+                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}
                   >
                     {selectedApp.status === 'APPROVED'
@@ -430,76 +430,76 @@ export const Applications: React.FC = () => {
                 </div>
               </div>
 
-              <div className="text-right text-xs text-chairly-muted">
+              <div className="text-right text-xs text-zinc-400">
                 <span>{t('ownerApplications.date')}</span>
-                <p className="font-semibold text-chairly-dark mt-0.5">
+                <p className="font-semibold text-zinc-950 mt-0.5">
                   {new Date(selectedApp.createdAt).toLocaleString()}
                 </p>
               </div>
             </div>
 
             {/* Application Information Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div className="p-4 bg-chairly-bg/50 rounded-2xl border border-chairly-border space-y-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-chairly-muted block">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-200 space-y-1">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 block">
                   {t('ownerApplications.business')}
                 </span>
-                <p className="font-bold text-chairly-dark text-base">{selectedApp.shopName}</p>
-                <p className="text-xs text-chairly-muted flex items-center gap-1.5 mt-1">
+                <p className="font-bold text-zinc-950 text-sm">{selectedApp.shopName}</p>
+                <p className="text-xs text-zinc-500 flex items-center gap-1.5 mt-1">
                   <Phone className="w-3.5 h-3.5" />
                   {selectedApp.shopPhone}
                 </p>
-                <p className="text-xs text-chairly-muted flex items-center gap-1.5">
+                <p className="text-xs text-zinc-500 flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 shrink-0" />
                   {selectedApp.city}, {selectedApp.address}
                 </p>
               </div>
 
-              <div className="p-4 bg-chairly-bg/50 rounded-2xl border border-chairly-border space-y-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-chairly-muted block">
+              <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-200 space-y-1">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 block">
                   {t('ownerApplications.applicant')}
                 </span>
-                <p className="font-bold text-chairly-dark text-base">{selectedApp.applicantName}</p>
-                <p className="text-xs text-chairly-muted flex items-center gap-1.5 mt-1">
+                <p className="font-bold text-zinc-950 text-sm">{selectedApp.applicantName}</p>
+                <p className="text-xs text-zinc-500 flex items-center gap-1.5 mt-1">
                   <Phone className="w-3.5 h-3.5" />
                   {formatPhone(selectedApp.applicantPhone)}
                 </p>
               </div>
 
               {/* Description */}
-              <div className="sm:col-span-2 p-4 bg-chairly-bg/50 rounded-2xl border border-chairly-border">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-chairly-muted block mb-1">
+              <div className="sm:col-span-2 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 block mb-1">
                   {t('application.descriptionLabel')}
                 </span>
-                <p className="text-xs text-chairly-dark leading-relaxed whitespace-pre-line">
+                <p className="text-xs text-zinc-900 leading-relaxed whitespace-pre-line">
                   {selectedApp.description}
                 </p>
               </div>
 
               {/* Photos if provided */}
               {(selectedApp.logoUrl || selectedApp.coverImageUrl) && (
-                <div className="sm:col-span-2 p-4 bg-chairly-bg/50 rounded-2xl border border-chairly-border space-y-3">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-chairly-muted block">
+                <div className="sm:col-span-2 p-4 bg-zinc-50 rounded-lg border border-zinc-200 space-y-3">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 block">
                     Fotosuratlar
                   </span>
                   <div className="flex items-center gap-4">
                     {selectedApp.logoUrl && (
                       <div className="space-y-1">
-                        <span className="text-[10px] text-chairly-muted block">Logotip</span>
+                        <span className="text-[10px] text-zinc-400 block">Logotip</span>
                         <img
                           src={selectedApp.logoUrl}
                           alt="Logo"
-                          className="w-16 h-16 rounded-xl object-cover border border-chairly-border"
+                          className="w-16 h-16 rounded-md object-cover border border-zinc-200"
                         />
                       </div>
                     )}
                     {selectedApp.coverImageUrl && (
                       <div className="space-y-1">
-                        <span className="text-[10px] text-chairly-muted block">Muqova rasmi</span>
+                        <span className="text-[10px] text-zinc-400 block">Muqova rasmi</span>
                         <img
                           src={selectedApp.coverImageUrl}
                           alt="Cover"
-                          className="w-32 h-16 rounded-xl object-cover border border-chairly-border"
+                          className="w-32 h-16 rounded-md object-cover border border-zinc-200"
                         />
                       </div>
                     )}
@@ -509,7 +509,7 @@ export const Applications: React.FC = () => {
 
               {/* Rejection reason if already rejected */}
               {selectedApp.rejectionReason && (
-                <div className="sm:col-span-2 p-4 bg-rose-50 rounded-2xl border border-rose-200 text-rose-800 text-xs">
+                <div className="sm:col-span-2 p-4 bg-rose-50 rounded-lg border border-rose-200 text-rose-800 text-xs">
                   <span className="font-bold block mb-0.5">{t('application.rejectionReason')}:</span>
                   {selectedApp.rejectionReason}
                 </div>

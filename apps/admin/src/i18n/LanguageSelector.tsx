@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation, Language } from './LanguageContext';
-import { Globe, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 interface LanguageSelectorProps {
   compact?: boolean;
@@ -35,15 +35,15 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ compact = fa
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-chairly-border bg-white hover:bg-chairly-panel text-chairly-dark text-xs font-semibold shadow-2xs transition-colors"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-900 text-xs font-semibold shadow-2xs transition-colors"
       >
-        <span className="text-sm">{currentLang.flag}</span>
-        {!compact && <span>{currentLang.label}</span>}
-        <ChevronDown className="w-3 h-3 text-chairly-muted" />
+        <span className="text-xs">{currentLang.flag}</span>
+        {!compact && <span className="text-xs">{currentLang.label}</span>}
+        <ChevronDown className="w-3 h-3 text-zinc-400" />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1.5 w-36 rounded-xl bg-white border border-chairly-border shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute right-0 mt-1 w-36 rounded-md bg-white border border-zinc-200 shadow-lg py-1 z-50">
           {LANGUAGES.map((item) => (
             <button
               key={item.code}
@@ -52,13 +52,13 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ compact = fa
                 setLanguage(item.code);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-xs font-medium flex items-center gap-2 hover:bg-chairly-bg transition-colors ${
+              className={`w-full text-left px-3 py-1.5 text-xs font-medium flex items-center gap-2 hover:bg-zinc-50 transition-colors ${
                 item.code === language
-                  ? 'text-chairly-terracotta-600 bg-chairly-terracotta-50/50 font-bold'
-                  : 'text-chairly-dark'
+                  ? 'text-black bg-zinc-100 font-bold'
+                  : 'text-zinc-700'
               }`}
             >
-              <span className="text-sm">{item.flag}</span>
+              <span className="text-xs">{item.flag}</span>
               <span>{item.label}</span>
             </button>
           ))}

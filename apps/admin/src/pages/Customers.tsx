@@ -72,20 +72,20 @@ export const Customers: React.FC = () => {
 
       {/* Customers Table */}
       {isLoading ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-chairly-border">
-          <div className="w-8 h-8 border-3 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm font-medium text-chairly-muted">Loading customer directory...</p>
+        <div className="p-16 text-center bg-white rounded-lg border border-zinc-200">
+          <div className="w-8 h-8 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs font-medium text-zinc-500">Loading customer directory...</p>
         </div>
       ) : customers.length === 0 ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-chairly-border">
-          <Users className="w-12 h-12 text-chairly-subtle mx-auto mb-3 opacity-40" />
-          <h3 className="text-base font-bold text-chairly-dark mb-1">No customers found</h3>
-          <p className="text-sm text-chairly-muted mb-4 max-w-sm mx-auto">
+        <div className="p-16 text-center bg-white rounded-lg border border-zinc-200">
+          <Users className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
+          <h3 className="text-sm font-bold text-zinc-950 mb-1">No customers found</h3>
+          <p className="text-xs text-zinc-500 mb-4 max-w-sm mx-auto">
             Customers will appear here automatically as they book appointments with your barbershop.
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-chairly-border shadow-2xs overflow-hidden">
+        <div className="bg-white rounded-lg border border-zinc-200/80 shadow-xs overflow-hidden">
           {/* Mobile Card List (< sm) */}
           <div className="sm:hidden divide-y divide-chairly-border">
             {customers.map((c) => (

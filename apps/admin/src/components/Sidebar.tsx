@@ -33,63 +33,54 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-chairly-border flex flex-col h-screen fixed left-0 top-0 z-30">
+    <aside className="w-64 bg-white border-r border-zinc-200 flex flex-col h-screen fixed left-0 top-0 z-30 antialiased">
       {/* Brand Header */}
-      <div className="p-5 border-b border-chairly-border flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-chairly-terracotta-500 text-white flex items-center justify-center font-bold text-xl shadow-sm">
-          C
-        </div>
+      <div className="p-5 border-b border-zinc-200 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-chairly-dark leading-tight">
-            Chairly
+          <h1 className="text-sm font-black tracking-[0.25em] uppercase text-black">
+            CHAIRLY
           </h1>
-          {isPlatformOwner ? (
-            <span className="text-[10px] font-bold tracking-wide uppercase text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-              👑 {t('common.status') === 'Holat' ? 'Platforma Egasi' : 'Platform Owner'}
-            </span>
-          ) : (
-            <span className="text-[10px] font-medium tracking-wide uppercase text-chairly-terracotta-600 bg-chairly-terracotta-50 px-1.5 py-0.5 rounded">
-              Staff Portal
-            </span>
-          )}
+          <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-semibold mt-0.5">
+            {isPlatformOwner ? 'Platform Owner' : 'Shop Management'}
+          </p>
         </div>
-      </div>
-
-      {/* Shop Switcher */}
-      <div className="p-4 border-b border-chairly-border bg-chairly-bg/60">
-        <label className="text-[11px] uppercase tracking-wider text-chairly-muted font-semibold block mb-1.5">
-          {t('nav.barbershops')}
-        </label>
-        <div className="relative">
-          <select
-            value={currentShopId || ''}
-            onChange={(e) => switchShop(e.target.value)}
-            disabled={memberships.length === 0}
-            className="w-full appearance-none bg-white border border-chairly-border rounded-lg pl-8 pr-8 py-2 text-sm font-medium text-chairly-dark focus:outline-none focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 cursor-pointer shadow-2xs disabled:opacity-60"
-          >
-            {memberships.length === 0 ? (
-              <option value="">{t('common.noData')}</option>
-            ) : (
-              memberships.map((m) => (
-                <option key={m.shopId} value={m.shopId}>
-                  {m.shopName}
-                </option>
-              ))
-            )}
-          </select>
-          <Building2 className="w-4 h-4 text-chairly-muted absolute left-2.5 top-2.5 pointer-events-none" />
-          <ChevronDown className="w-4 h-4 text-chairly-muted absolute right-2.5 top-2.5 pointer-events-none" />
-        </div>
-        {currentMembership && (
-          <div className="mt-1.5 text-xs text-chairly-muted flex items-center justify-between">
-            <span>Rol:</span>
-            <span className="font-semibold text-chairly-dark">{currentMembership.role}</span>
-          </div>
+        {isPlatformOwner && (
+          <span className="text-[9px] font-bold tracking-wider uppercase text-amber-900 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-sm">
+            👑 Owner
+          </span>
         )}
       </div>
 
+      {/* Shop Switcher */}
+      {memberships.length > 0 && (
+        <div className="p-3.5 border-b border-zinc-200 bg-zinc-50/60">
+          <label className="text-[9px] uppercase tracking-[0.15em] text-zinc-400 font-bold block mb-1">
+            {t('nav.barbershops')}
+          </label>
+          <div className="relative">
+            <select
+              value={currentShopId || ''}
+              onChange={(e) => switchShop(e.target.value)}
+              className="w-full appearance-none bg-white border border-zinc-300 rounded-md pl-7 pr-7 py-1.5 text-xs font-semibold text-zinc-900 shadow-2xs focus:outline-hidden cursor-pointer"
+            >
+              {memberships.map((m) => (
+                <option key={m.shopId} value={m.shopId}>
+                  {m.shopName}
+                </option>
+              ))}
+            </select>
+            <Building2 className="w-3.5 h-3.5 text-zinc-500 absolute left-2 top-2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2 top-2 pointer-events-none" />
+          </div>
+        </div>
+      )}
+
       {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
+        <span className="text-[9px] uppercase tracking-[0.15em] text-zinc-400 font-bold px-2 py-1 block">
+          Navigation
+        </span>
+
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -98,14 +89,14 @@ export const Sidebar: React.FC = () => {
               to={item.path}
               end={item.path === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                `flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-semibold transition-all ${
                   isActive
-                    ? 'bg-chairly-terracotta-50 text-chairly-terracotta-600 font-semibold'
-                    : 'text-chairly-muted hover:text-chairly-dark hover:bg-chairly-panel'
+                    ? 'bg-black text-white shadow-2xs'
+                    : 'text-zinc-600 hover:text-black hover:bg-zinc-100'
                 }`
               }
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-4 h-4" />
               {item.label}
             </NavLink>
           );
@@ -113,32 +104,35 @@ export const Sidebar: React.FC = () => {
 
         {/* Platform Owner Exclusive Menu Items */}
         {isPlatformOwner && (
-          <div className="pt-3 mt-3 border-t border-chairly-border space-y-1">
+          <div className="pt-3 mt-3 border-t border-zinc-200 space-y-1">
+            <span className="text-[9px] uppercase tracking-[0.15em] text-zinc-400 font-bold px-2 py-1 block">
+              Platform Administration
+            </span>
             <NavLink
               to="/applications"
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                `flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-bold transition-all ${
                   isActive
-                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                    : 'bg-amber-50/80 text-amber-800 border border-amber-200/80 hover:bg-amber-100'
+                    ? 'bg-amber-100 text-amber-950 border border-amber-300'
+                    : 'bg-amber-50/80 text-amber-900 border border-amber-200/80 hover:bg-amber-100'
                 }`
               }
             >
-              <FileText className="w-5 h-5 text-amber-700" />
+              <FileText className="w-4 h-4 text-amber-700" />
               {t('nav.applications')}
             </NavLink>
 
             <NavLink
               to="/shops"
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                `flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-bold transition-all ${
                   isActive
-                    ? 'bg-chairly-terracotta-100 text-chairly-terracotta-900 border border-chairly-terracotta-300'
-                    : 'bg-chairly-panel hover:bg-chairly-border text-chairly-dark border border-chairly-border'
+                    ? 'bg-zinc-900 text-white'
+                    : 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200'
                 }`
               }
             >
-              <Building2 className="w-5 h-5 text-chairly-terracotta-600" />
+              <Building2 className="w-4 h-4 text-zinc-700" />
               {t('nav.barbershopNetwork')}
             </NavLink>
           </div>
@@ -146,28 +140,28 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {/* Staff Profile & Logout */}
-      <div className="p-4 border-t border-chairly-border bg-chairly-bg/40">
+      <div className="p-3.5 border-t border-zinc-200 bg-zinc-50/60">
         <div className="flex items-center justify-between">
           <NavLink
             to="/profile"
             className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity"
             title={t('nav.profile')}
           >
-            <div className="w-9 h-9 rounded-full bg-chairly-terracotta-100 text-chairly-terracotta-700 border border-chairly-terracotta-200 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+            <div className="w-8 h-8 rounded-md bg-black text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
               {user?.avatarUrl ? (
                 <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <>
-                  {user?.firstName?.[0]}
-                  {user?.lastName?.[0]}
+                  {user?.firstName?.[0] || 'U'}
+                  {user?.lastName?.[0] || ''}
                 </>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-chairly-dark truncate">
+              <p className="text-xs font-bold text-zinc-900 truncate">
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="text-[11px] text-chairly-muted truncate">
+              <p className="text-[10px] text-zinc-500 font-mono truncate">
                 {user?.phone ? formatPhone(user.phone) : user?.email}
               </p>
             </div>
@@ -175,7 +169,7 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={logout}
             title={t('nav.logout')}
-            className="p-1.5 rounded-lg text-chairly-muted hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1"
+            className="p-1.5 rounded-md text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1"
           >
             <LogOut className="w-4 h-4" />
           </button>

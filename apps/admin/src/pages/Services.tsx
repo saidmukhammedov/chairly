@@ -153,21 +153,21 @@ export const Services: React.FC = () => {
 
       {/* Services Grid */}
       {isLoading ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-chairly-border">
-          <div className="w-8 h-8 border-3 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm font-medium text-chairly-muted">Loading services...</p>
+        <div className="p-16 text-center bg-white rounded-lg border border-zinc-200">
+          <div className="w-8 h-8 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs font-medium text-zinc-500">Loading services...</p>
         </div>
       ) : services.length === 0 ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-chairly-border">
-          <Scissors className="w-12 h-12 text-chairly-subtle mx-auto mb-3 opacity-40" />
-          <h3 className="text-base font-bold text-chairly-dark mb-1">No services created yet</h3>
-          <p className="text-sm text-chairly-muted mb-4 max-w-sm mx-auto">
+        <div className="p-16 text-center bg-white rounded-lg border border-zinc-200">
+          <Scissors className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
+          <h3 className="text-sm font-bold text-zinc-950 mb-1">No services created yet</h3>
+          <p className="text-xs text-zinc-500 mb-4 max-w-sm mx-auto">
             Add your barbershop's haircuts, beard trims, and grooming packages.
           </p>
           {isOwnerOrManager && (
             <button
               onClick={openCreateModal}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-chairly-terracotta-500 text-white rounded-xl text-xs font-semibold hover:bg-chairly-terracotta-600 transition-colors"
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-zinc-950 text-white rounded-md text-xs font-semibold hover:bg-black transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add First Service
@@ -179,7 +179,7 @@ export const Services: React.FC = () => {
           {services.map((service) => (
             <div
               key={service.id}
-              className="bg-white p-6 rounded-2xl border border-chairly-border shadow-2xs flex flex-col justify-between hover:border-chairly-terracotta-500/40 transition-all"
+              className="bg-white p-5 rounded-lg border border-zinc-200/80 shadow-xs flex flex-col justify-between hover:border-zinc-400 transition-all"
             >
               <div>
                 <div className="flex items-start justify-between gap-2 mb-2">

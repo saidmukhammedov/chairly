@@ -315,7 +315,7 @@ export const ShopManagement: React.FC = () => {
       {/* Alert Feedback */}
       {feedback && (
         <div
-          className={`p-4 rounded-2xl border text-xs sm:text-sm font-medium flex items-center justify-between gap-2 ${
+          className={`p-3 rounded-md border text-xs font-medium flex items-center justify-between gap-2 ${
             feedback.type === 'success'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
               : 'bg-rose-50 border-rose-200 text-rose-800'
@@ -339,27 +339,27 @@ export const ShopManagement: React.FC = () => {
       )}
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-chairly-border shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="bg-white p-4 rounded-lg border border-zinc-200/80 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-chairly-muted" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by shop name, city, or address..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-chairly-border text-sm focus:outline-hidden focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 text-chairly-dark min-h-[40px]"
+            className="w-full pl-10 pr-4 py-2 rounded-md border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 text-zinc-900 min-h-[38px] bg-zinc-50/50"
           />
         </div>
 
-        <div className="flex items-center gap-1 bg-chairly-bg p-1 rounded-xl border border-chairly-border shrink-0 self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-md border border-zinc-200 shrink-0 self-start sm:self-auto">
           {(['all', 'active', 'inactive'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
+              className={`px-3 py-1.5 rounded-sm text-xs font-semibold capitalize transition-all ${
                 filterStatus === status
-                  ? 'bg-white text-chairly-dark shadow-2xs'
-                  : 'text-chairly-muted hover:text-chairly-dark'
+                  ? 'bg-white text-zinc-950 shadow-xs'
+                  : 'text-zinc-500 hover:text-zinc-950'
               }`}
             >
               {status === 'all' ? 'All Shops' : status === 'active' ? 'Published' : 'Draft / Inactive'}
@@ -370,16 +370,16 @@ export const ShopManagement: React.FC = () => {
 
       {/* Shop Cards Grid */}
       {isLoading ? (
-        <div className="py-20 flex flex-col items-center justify-center text-chairly-muted gap-3">
-          <div className="w-8 h-8 border-3 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium">Loading barbershops...</p>
+        <div className="py-20 flex flex-col items-center justify-center text-zinc-400 gap-3">
+          <div className="w-8 h-8 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium text-zinc-500">Loading barbershops...</p>
         </div>
       ) : filteredShops.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-chairly-border text-center max-w-md mx-auto space-y-4">
-          <Building2 className="w-12 h-12 text-chairly-muted mx-auto" />
+        <div className="bg-white p-12 rounded-lg border border-zinc-200 text-center max-w-md mx-auto space-y-4">
+          <Building2 className="w-10 h-10 text-zinc-300 mx-auto" />
           <div>
-            <h3 className="text-base font-bold text-chairly-dark">No Barbershops Found</h3>
-            <p className="text-xs text-chairly-muted mt-1">
+            <h3 className="text-sm font-bold text-zinc-950">No Barbershops Found</h3>
+            <p className="text-xs text-zinc-500 mt-1">
               {search || filterStatus !== 'all'
                 ? 'Try adjusting your search criteria or filters.'
                 : 'Get started by registering the first barbershop on the platform!'}
@@ -387,7 +387,7 @@ export const ShopManagement: React.FC = () => {
           </div>
           <button
             onClick={handleOpenCreate}
-            className="px-5 py-2.5 bg-chairly-terracotta-500 text-white rounded-xl text-sm font-semibold hover:bg-chairly-terracotta-600 transition-colors inline-flex items-center gap-2"
+            className="px-4 py-2 bg-zinc-950 text-white rounded-md text-xs font-semibold hover:bg-black transition-colors inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Create First Barbershop
@@ -398,7 +398,7 @@ export const ShopManagement: React.FC = () => {
           {filteredShops.map((shop) => (
             <div
               key={shop.id}
-              className="bg-white rounded-3xl border border-chairly-border shadow-2xs overflow-hidden flex flex-col hover:shadow-xs transition-all"
+              className="bg-white rounded-lg border border-zinc-200/80 shadow-xs overflow-hidden flex flex-col hover:border-zinc-400 transition-all"
             >
               {/* Cover Image Header */}
               <div className="h-40 relative bg-neutral-100 overflow-hidden">
@@ -871,7 +871,7 @@ export const ShopManagement: React.FC = () => {
           title={`Customer Preview — ${previewShop.name}`}
         >
           <div className="space-y-4 max-h-[75vh] overflow-y-auto">
-            <div className="relative rounded-2xl overflow-hidden h-44 bg-neutral-100">
+            <div className="relative rounded-lg overflow-hidden h-44 bg-neutral-100">
               <img
                 src={previewShop.coverImageUrl || COVER_PRESETS[0]}
                 alt={previewShop.name}
@@ -879,15 +879,15 @@ export const ShopManagement: React.FC = () => {
               />
               <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-3 left-4 right-4 text-white">
-                <h3 className="text-xl font-bold">{previewShop.name}</h3>
+                <h3 className="text-lg font-bold">{previewShop.name}</h3>
                 <p className="text-xs text-white/90 flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3.5 h-3.5 text-chairly-terracotta-400" />
+                  <MapPin className="w-3.5 h-3.5 text-zinc-300" />
                   {previewShop.address}, {previewShop.city}
                 </p>
               </div>
             </div>
 
-            <div className="p-4 bg-chairly-bg rounded-2xl border border-chairly-border space-y-2">
+            <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-200 space-y-2">
               <h4 className="text-xs font-bold text-chairly-dark uppercase tracking-wider">About</h4>
               <p className="text-xs text-chairly-muted leading-relaxed">
                 {previewShop.description}

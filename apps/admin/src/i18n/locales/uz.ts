@@ -26,6 +26,7 @@ export const uz = {
     error: "Xatolik yuz berdi",
     tryAgain: "Qayta urinish",
     noData: "Ma'lumot topilmadi",
+    more: "Ko'proq",
   },
   nav: {
     dashboard: "Boshqaruv paneli",
@@ -41,12 +42,12 @@ export const uz = {
     logout: "Chiqish",
     login: "Kirish",
     register: "Ro‘yxatdan o‘tish",
-    applyBusiness: "Sartaroshxonangizni qo'shing",
+    applyBusiness: "Sartaroshxonani ulash",
     notifications: "Xabarnomalar",
   },
   // Auth: Login & Register
   auth: {
-    welcomeBack: "Xush kelibsiz!",
+    welcomeBack: "Xush kelibsiz",
     loginSubtitle: "Chairly hisobingizga telefon raqamingiz orqali kiring",
     phoneLabel: "Telefon raqami",
     phonePlaceholder: "+998 90 123 45 67",
@@ -68,7 +69,23 @@ export const uz = {
     registerError: "Ro‘yxatdan o‘tishda xatolik yuz berdi",
     haveBarbershop: "Sartaroshxonangiz bormi?",
     joinPlatformPromo: "Biznesingizni Chairly platformasiga qo‘shing va yangi mijozlarni jalb qiling.",
+    barbershopPromoTitle: "Sartaroshxonangiz bormi?",
+    barbershopPromoDesc: "Biznesingizni Chairly platformasiga qo‘shing va yangi mijozlarni jalb qiling.",
     applyButton: "Ariza berish",
+  },
+  // Portal
+  portal: {
+    discoverTitle: "Toshkentning sara sartaroshxonalari",
+    discoverSubtitle: "Eng mohir ustalar va qulay vaqtni tanlang",
+    loadingShops: "Sartaroshxonalar yuklanmoqda...",
+    noShopsTitle: "Hozircha faol sartaroshxonalar ro'yxati mavjud emas",
+    noShopsDesc: "Agar siz sartaroshxona egasi bo'lsangiz, arizangizni topshiring va birinchilardan bo'ling.",
+    exploreTab: "Sartaroshxonalar",
+    bookingsTab: "Buyurtmalarim",
+    profileTab: "Profilim",
+    partnerBannerTitle: "Sartaroshxona egasimisiz?",
+    partnerBannerDesc: "Biznesingizni Chairly tarmog'iga ulang va onlayn bron tizimidan foydalaning.",
+    applyPartnerButton: "Hamkor bo'lish",
   },
   // Application for Business ("Add your barbershop")
   application: {
@@ -142,11 +159,11 @@ export const uz = {
   },
   // Customer Portal & Booking
   customer: {
-    heroTitle: "Sizga yaqin eng yaxshi sartaroshxona",
-    heroSubtitle: "O'z vaqtingizni tejang — bir necha soniyada sartarosh qabuliga yoziling",
+    heroTitle: "Toshkentning sara sartaroshxonalari",
+    heroSubtitle: "O'z vaqtingizni tejang — eng mohir ustalar va qulay vaqtni tanlang",
     searchPlaceholder: "Sartaroshxona nomi yoki manzil bo'yicha...",
     popularShops: "Mavjud sartaroshxonalar",
-    bookAppointment: "Qabulga yozilish",
+    bookAppointment: "Band qilish",
     startingFrom: "dan boshlab",
     myBookingsTab: "Mening buyurtmalarim",
     exploreTab: "Sartaroshxonalar",

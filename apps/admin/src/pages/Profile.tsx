@@ -15,6 +15,7 @@ import {
   Save,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n';
 import api from '../services/api';
 
 const AVATAR_PRESETS = [
@@ -27,6 +28,7 @@ const AVATAR_PRESETS = [
 
 export const Profile: React.FC = () => {
   const { user, memberships, updateProfile } = useAuth();
+  const { t } = useTranslation();
 
   // Profile Form State
   const [firstName, setFirstName] = useState(user?.firstName || '');
@@ -53,7 +55,7 @@ export const Profile: React.FC = () => {
     setProfileError(null);
 
     if (!firstName.trim() || !lastName.trim()) {
-      setProfileError('First name and last name are required.');
+      setProfileError('Ism va familiya kiritilishi shart');
       return;
     }
 
@@ -65,9 +67,9 @@ export const Profile: React.FC = () => {
         phone: phone.trim() || undefined,
         avatarUrl: avatarUrl.trim() || undefined,
       });
-      setProfileSuccess('Your profile has been updated successfully.');
+      setProfileSuccess(t('profile.profileSaved'));
     } catch (err: any) {
-      setProfileError(err.message || 'Failed to update profile. Please try again.');
+      setProfileError(err.message || 'Xatolik yuz berdi. Qayta urinib ko‘ring.');
     } finally {
       setIsSavingProfile(false);
     }
@@ -79,29 +81,29 @@ export const Profile: React.FC = () => {
     setPasswordError(null);
 
     if (!currentPassword) {
-      setPasswordError('Please enter your current password.');
+      setPasswordError(t('profile.currentPassword') + ' kiritilishi shart');
       return;
     }
 
     if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters long.');
+      setPasswordError(t('profile.newPassword') + ' kamida 6 ta belgidan iborat bo‘lishi kerak');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match.');
+      setPasswordError('Parollar bir-biriga mos kelmadi');
       return;
     }
 
     setIsChangingPassword(true);
     try {
       await api.put('/auth/password', { currentPassword, newPassword });
-      setPasswordSuccess('Your password has been changed successfully.');
+      setPasswordSuccess(t('profile.passwordChanged'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      setPasswordError(err.message || 'Failed to change password. Please verify current password.');
+      setPasswordError(err.message || 'Joriy parol noto‘g‘ri yoki xatolik yuz berdi');
     } finally {
       setIsChangingPassword(false);
     }
@@ -110,21 +112,21 @@ export const Profile: React.FC = () => {
   const getRoleBadge = (role?: string) => {
     if (role === 'OWNER') {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
-          👑 Platform Owner
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[11px] font-semibold uppercase tracking-wider bg-zinc-950 text-white">
+          <Shield className="w-3 h-3 text-amber-400" /> Platform Owner
         </span>
       );
     }
     if (role === 'MANAGER' || role === 'BARBER') {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-chairly-terracotta-50 text-chairly-terracotta-700 border border-chairly-terracotta-200">
-          💈 Shop Administrator
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[11px] font-semibold uppercase tracking-wider bg-zinc-900 text-zinc-100 border border-zinc-700">
+          <Building2 className="w-3 h-3 text-zinc-400" /> Shop Admin
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-        👤 Customer Account
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[11px] font-semibold uppercase tracking-wider bg-zinc-100 text-zinc-800 border border-zinc-200">
+        <UserIcon className="w-3 h-3 text-zinc-500" /> Mijoz
       </span>
     );
   };
@@ -132,13 +134,13 @@ export const Profile: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-zinc-200">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-chairly-dark">
-            Account Profile
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950">
+            {t('profile.title')}
           </h1>
-          <p className="text-sm text-chairly-muted mt-1">
-            Manage your personal details, contact information, and account security.
+          <p className="text-xs text-zinc-500 mt-1">
+            {t('profile.subtitle')}
           </p>
         </div>
         <div>{getRoleBadge(user?.role)}</div>
@@ -147,16 +149,16 @@ export const Profile: React.FC = () => {
       {/* Grid of Profile and Password */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Avatar & Overview */}
-        <div className="bg-white p-6 rounded-3xl border border-chairly-border shadow-2xs flex flex-col items-center text-center space-y-4">
+        <div className="bg-white p-6 rounded-lg border border-zinc-200/80 shadow-xs flex flex-col items-center text-center space-y-4">
           <div className="relative group">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
                 alt="Profile Avatar"
-                className="w-28 h-28 rounded-3xl object-cover border-2 border-chairly-border shadow-sm"
+                className="w-24 h-24 rounded-lg object-cover border border-zinc-200 shadow-xs"
               />
             ) : (
-              <div className="w-28 h-28 rounded-3xl bg-chairly-terracotta-100 text-chairly-terracotta-700 font-bold text-3xl flex items-center justify-center border-2 border-chairly-terracotta-200 shadow-sm">
+              <div className="w-24 h-24 rounded-lg bg-zinc-950 text-white font-bold text-2xl flex items-center justify-center shadow-xs">
                 {firstName?.[0] || 'C'}
                 {lastName?.[0] || 'U'}
               </div>
@@ -164,15 +166,17 @@ export const Profile: React.FC = () => {
           </div>
 
           <div>
-            <h2 className="text-lg font-bold text-chairly-dark">
+            <h2 className="text-base font-bold text-zinc-950">
               {firstName} {lastName}
             </h2>
-            <p className="text-xs text-chairly-muted flex items-center justify-center gap-1 mt-0.5">
-              <Mail className="w-3.5 h-3.5" />
-              {user?.email}
-            </p>
+            {user?.email && (
+              <p className="text-xs text-zinc-500 flex items-center justify-center gap-1 mt-0.5">
+                <Mail className="w-3.5 h-3.5" />
+                {user.email}
+              </p>
+            )}
             {phone && (
-              <p className="text-xs text-chairly-muted flex items-center justify-center gap-1 mt-0.5">
+              <p className="text-xs text-zinc-500 flex items-center justify-center gap-1 mt-0.5">
                 <Phone className="w-3.5 h-3.5" />
                 {phone}
               </p>
@@ -180,9 +184,9 @@ export const Profile: React.FC = () => {
           </div>
 
           {/* Quick Presets for Avatars */}
-          <div className="w-full pt-4 border-t border-chairly-border">
-            <label className="text-xs font-semibold text-chairly-muted uppercase tracking-wider block mb-2">
-              Choose Avatar Preset
+          <div className="w-full pt-4 border-t border-zinc-100">
+            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest block mb-2">
+              {t('profile.choosePreset')}
             </label>
             <div className="flex justify-center gap-2 flex-wrap">
               {AVATAR_PRESETS.map((preset, index) => (
@@ -190,10 +194,10 @@ export const Profile: React.FC = () => {
                   key={index}
                   type="button"
                   onClick={() => setAvatarUrl(preset)}
-                  className={`w-10 h-10 rounded-xl overflow-hidden border-2 transition-all ${
+                  className={`w-9 h-9 rounded-md overflow-hidden border transition-all ${
                     avatarUrl === preset
-                      ? 'border-chairly-terracotta-500 scale-105 shadow-xs'
-                      : 'border-transparent opacity-70 hover:opacity-100'
+                      ? 'border-zinc-950 ring-1 ring-zinc-950'
+                      : 'border-zinc-200 opacity-60 hover:opacity-100'
                   }`}
                 >
                   <img src={preset} alt={`Preset ${index + 1}`} className="w-full h-full object-cover" />
@@ -203,9 +207,9 @@ export const Profile: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setAvatarUrl('')}
-                  className="px-2 py-1 rounded-lg text-[10px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-colors"
+                  className="px-2 py-1 rounded text-[10px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-colors"
                 >
-                  Clear Photo
+                  Tozalash
                 </button>
               )}
             </div>
@@ -213,21 +217,21 @@ export const Profile: React.FC = () => {
 
           {/* Memberships if staff/admin */}
           {memberships && memberships.length > 0 && (
-            <div className="w-full pt-4 border-t border-chairly-border text-left">
-              <label className="text-xs font-semibold text-chairly-muted uppercase tracking-wider block mb-2 flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-chairly-terracotta-500" />
-                Assigned Barbershops
+            <div className="w-full pt-4 border-t border-zinc-100 text-left">
+              <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest block mb-2 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-zinc-600" />
+                Biriktirilgan sartaroshxonalar
               </label>
               <div className="space-y-1.5">
                 {memberships.map((m) => (
                   <div
                     key={m.shopId}
-                    className="p-2.5 rounded-xl bg-chairly-bg border border-chairly-border text-xs flex items-center justify-between"
+                    className="p-2 rounded-md bg-zinc-50 border border-zinc-200 text-xs flex items-center justify-between"
                   >
-                    <span className="font-semibold text-chairly-dark truncate max-w-[150px]">
+                    <span className="font-medium text-zinc-900 truncate max-w-[150px]">
                       {m.shopName}
                     </span>
-                    <span className="text-[10px] font-bold text-chairly-terracotta-600 bg-chairly-terracotta-50 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-semibold text-zinc-600 bg-zinc-200 px-1.5 py-0.5 rounded-xs">
                       {m.role}
                     </span>
                   </div>
@@ -240,24 +244,24 @@ export const Profile: React.FC = () => {
         {/* Right Column: Edit Details & Password */}
         <div className="lg:col-span-2 space-y-6">
           {/* Edit Profile Form Card */}
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-chairly-border shadow-2xs">
-            <h3 className="text-lg font-bold text-chairly-dark mb-1 flex items-center gap-2">
-              <UserIcon className="w-5 h-5 text-chairly-terracotta-500" />
-              Personal Details
+          <div className="bg-white p-6 sm:p-8 rounded-lg border border-zinc-200/80 shadow-xs">
+            <h3 className="text-sm font-bold text-zinc-950 mb-0.5 flex items-center gap-2">
+              <UserIcon className="w-4 h-4 text-zinc-600" />
+              {t('profile.personalInfo')}
             </h3>
-            <p className="text-xs text-chairly-muted mb-6">
-              Update your personal information displayed on bookings and appointments.
+            <p className="text-xs text-zinc-500 mb-5">
+              {t('profile.subtitle')}
             </p>
 
             {profileSuccess && (
-              <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-800 flex items-center gap-2">
+              <div className="mb-5 p-3 rounded-md bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-800 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>{profileSuccess}</span>
               </div>
             )}
 
             {profileError && (
-              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs font-medium text-rose-800 flex items-center gap-2">
+              <div className="mb-5 p-3 rounded-md bg-rose-50 border border-rose-200 text-xs font-medium text-rose-800 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>{profileError}</span>
               </div>
@@ -266,70 +270,67 @@ export const Profile: React.FC = () => {
             <form onSubmit={handleProfileSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-chairly-dark uppercase tracking-wider mb-1.5">
-                    First Name *
+                  <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                    {t('auth.fullNameLabel')} (Ism) *
                   </label>
                   <input
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
-                    className="w-full px-4 py-2.5 rounded-xl border border-chairly-border focus:outline-hidden focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 text-sm text-chairly-dark"
+                    className="w-full px-3.5 py-2 rounded-md border border-zinc-200 bg-zinc-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 text-xs text-zinc-900 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-chairly-dark uppercase tracking-wider mb-1.5">
-                    Last Name *
+                  <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                    Familiya *
                   </label>
                   <input
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
-                    className="w-full px-4 py-2.5 rounded-xl border border-chairly-border focus:outline-hidden focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 text-sm text-chairly-dark"
+                    className="w-full px-3.5 py-2 rounded-md border border-zinc-200 bg-zinc-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 text-xs text-zinc-900 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-chairly-dark uppercase tracking-wider mb-1.5">
-                    Email Address
+                  <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                    Email
                   </label>
                   <input
                     type="email"
                     value={user?.email || ''}
                     disabled
-                    className="w-full px-4 py-2.5 rounded-xl border border-chairly-border bg-chairly-bg text-chairly-muted text-sm cursor-not-allowed"
+                    className="w-full px-3.5 py-2 rounded-md border border-zinc-200 bg-zinc-100 text-zinc-400 text-xs cursor-not-allowed"
                   />
-                  <span className="text-[10px] text-chairly-muted mt-1 block">
-                    Account email is managed by your sign-in provider.
-                  </span>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-chairly-dark uppercase tracking-wider mb-1.5">
-                    Phone Number
+                  <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                    {t('auth.phoneLabel')}
                   </label>
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+998 90 123 45 67"
-                    className="w-full px-4 py-2.5 rounded-xl border border-chairly-border focus:outline-hidden focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 text-sm text-chairly-dark"
+                    className="w-full px-3.5 py-2 rounded-md border border-zinc-200 bg-zinc-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 text-xs text-zinc-900 transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-chairly-dark uppercase tracking-wider mb-1.5">
-                  Profile Photo URL (optional)
+                <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                  {t('profile.customUrl')}
                 </label>
                 <input
                   type="url"
                   value={avatarUrl}
                   onChange={(e) => setAvatarUrl(e.target.value)}
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-chairly-border focus:outline-hidden focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 text-sm text-chairly-dark"
+                  className="w-full px-3.5 py-2 rounded-md border border-zinc-200 bg-zinc-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 text-xs text-zinc-900 transition-all"
                 />
               </div>
 
@@ -337,38 +338,38 @@ export const Profile: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSavingProfile}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-chairly-terracotta-500 hover:bg-chairly-terracotta-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-2xs transition-all min-h-[44px]"
+                  className="w-full sm:w-auto px-5 py-2 bg-zinc-950 hover:bg-black disabled:opacity-50 text-white rounded-md text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all min-h-[38px]"
                 >
                   {isSavingProfile ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Save className="w-4 h-4" />
+                    <Save className="w-3.5 h-3.5" />
                   )}
-                  Save Profile Changes
+                  {t('common.save')}
                 </button>
               </div>
             </form>
           </div>
 
           {/* Change Password Card */}
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-chairly-border shadow-2xs">
-            <h3 className="text-lg font-bold text-chairly-dark mb-1 flex items-center gap-2">
-              <KeyRound className="w-5 h-5 text-chairly-terracotta-500" />
-              Account Security & Password
+          <div className="bg-white p-6 sm:p-8 rounded-lg border border-zinc-200/80 shadow-xs">
+            <h3 className="text-sm font-bold text-zinc-950 mb-0.5 flex items-center gap-2">
+              <KeyRound className="w-4 h-4 text-zinc-600" />
+              {t('profile.changePassword')}
             </h3>
-            <p className="text-xs text-chairly-muted mb-6">
-              Update your password to keep your Chairly account protected.
+            <p className="text-xs text-zinc-500 mb-5">
+              Xavfsizlik maqsadida parolingizni muntazam yangilab turing.
             </p>
 
             {passwordSuccess && (
-              <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-800 flex items-center gap-2">
+              <div className="mb-5 p-3 rounded-md bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-800 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>{passwordSuccess}</span>
               </div>
             )}
 
             {passwordError && (
-              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs font-medium text-rose-800 flex items-center gap-2">
+              <div className="mb-5 p-3 rounded-md bg-rose-50 border border-rose-200 text-xs font-medium text-rose-800 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>{passwordError}</span>
               </div>
@@ -376,8 +377,8 @@ export const Profile: React.FC = () => {
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-chairly-dark uppercase tracking-wider mb-1.5">
-                  Current Password *
+                <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                  {t('profile.currentPassword')} *
                 </label>
                 <div className="relative">
                   <input
@@ -385,23 +386,23 @@ export const Profile: React.FC = () => {
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     required
-                    placeholder="Enter existing password"
-                    className="w-full px-4 py-2.5 pr-10 rounded-xl border border-chairly-border focus:outline-hidden focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 text-sm text-chairly-dark"
+                    placeholder="••••••••"
+                    className="w-full px-3.5 py-2 pr-10 rounded-md border border-zinc-200 bg-zinc-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 text-xs text-zinc-900 transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-chairly-muted hover:text-chairly-dark p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900 p-1"
                   >
-                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showCurrentPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-chairly-dark uppercase tracking-wider mb-1.5">
-                    New Password (min. 6 chars) *
+                  <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                    {t('profile.newPassword')} *
                   </label>
                   <div className="relative">
                     <input
@@ -409,30 +410,30 @@ export const Profile: React.FC = () => {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
-                      placeholder="At least 6 characters"
-                      className="w-full px-4 py-2.5 pr-10 rounded-xl border border-chairly-border focus:outline-hidden focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 text-sm text-chairly-dark"
+                      placeholder="••••••••"
+                      className="w-full px-3.5 py-2 pr-10 rounded-md border border-zinc-200 bg-zinc-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 text-xs text-zinc-900 transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-chairly-muted hover:text-chairly-dark p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900 p-1"
                     >
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-chairly-dark uppercase tracking-wider mb-1.5">
-                    Confirm New Password *
+                  <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+                    {t('profile.confirmNewPassword')} *
                   </label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    placeholder="Re-type new password"
-                    className="w-full px-4 py-2.5 rounded-xl border border-chairly-border focus:outline-hidden focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 text-sm text-chairly-dark"
+                    placeholder="••••••••"
+                    className="w-full px-3.5 py-2 rounded-md border border-zinc-200 bg-zinc-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 text-xs text-zinc-900 transition-all"
                   />
                 </div>
               </div>
@@ -441,14 +442,14 @@ export const Profile: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isChangingPassword}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-chairly-dark hover:bg-neutral-800 disabled:opacity-50 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-2xs transition-all min-h-[44px]"
+                  className="w-full sm:w-auto px-5 py-2 bg-zinc-950 hover:bg-black disabled:opacity-50 text-white rounded-md text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all min-h-[38px]"
                 >
                   {isChangingPassword ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <KeyRound className="w-4 h-4" />
+                    <KeyRound className="w-3.5 h-3.5" />
                   )}
-                  Update Password
+                  {t('profile.changePassword')}
                 </button>
               </div>
             </form>

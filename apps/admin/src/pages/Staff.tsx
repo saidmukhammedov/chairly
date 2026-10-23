@@ -190,21 +190,21 @@ export const Staff: React.FC = () => {
 
       {/* Barbers Grid */}
       {isLoading ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-chairly-border">
-          <div className="w-8 h-8 border-3 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm font-medium text-chairly-muted">Loading team members...</p>
+        <div className="p-16 text-center bg-white rounded-lg border border-zinc-200">
+          <div className="w-8 h-8 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs font-medium text-zinc-500">Loading team members...</p>
         </div>
       ) : barbers.length === 0 ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-chairly-border">
-          <UserCheck className="w-12 h-12 text-chairly-subtle mx-auto mb-3 opacity-40" />
-          <h3 className="text-base font-bold text-chairly-dark mb-1">No barbers found</h3>
-          <p className="text-sm text-chairly-muted mb-4 max-w-sm mx-auto">
+        <div className="p-16 text-center bg-white rounded-lg border border-zinc-200">
+          <UserCheck className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
+          <h3 className="text-sm font-bold text-zinc-950 mb-1">No barbers found</h3>
+          <p className="text-xs text-zinc-500 mb-4 max-w-sm mx-auto">
             Add barbers to your shop so customers can book appointments with them.
           </p>
           {isOwnerOrManager && (
             <button
               onClick={openCreateModal}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-chairly-terracotta-500 text-white rounded-xl text-xs font-semibold hover:bg-chairly-terracotta-600 transition-colors"
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-zinc-950 text-white rounded-md text-xs font-semibold hover:bg-black transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add First Barber
@@ -216,11 +216,11 @@ export const Staff: React.FC = () => {
           {barbers.map((barber) => (
             <div
               key={barber.id}
-              className="bg-white rounded-2xl border border-chairly-border shadow-2xs overflow-hidden flex flex-col justify-between hover:border-chairly-terracotta-500/40 transition-all"
+              className="bg-white rounded-lg border border-zinc-200/80 shadow-xs overflow-hidden flex flex-col justify-between hover:border-zinc-400 transition-all"
             >
-              <div className="p-6">
+              <div className="p-5">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-chairly-panel border border-chairly-border overflow-hidden shrink-0 flex items-center justify-center font-bold text-base text-chairly-dark">
+                  <div className="w-12 h-12 rounded-md bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center font-bold text-sm text-zinc-950">
                     {barber.avatarUrl ? (
                       <img
                         src={barber.avatarUrl}
@@ -417,7 +417,7 @@ export const Staff: React.FC = () => {
             Configure working days and shift hours. Times outside these intervals are automatically marked as unavailable on the booking calendar.
           </p>
 
-          <div className="divide-y divide-chairly-border border border-chairly-border rounded-2xl overflow-hidden">
+          <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md overflow-hidden">
             {scheduleDraft.map((item, index) => {
               const dayName = DAYS_OF_WEEK.find((d: any) => d.day === item.dayOfWeek)?.name || 'Day';
               return (

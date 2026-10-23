@@ -13,10 +13,12 @@ import {
   RefreshCw,
   Sparkles,
   ChevronRight,
-  ShieldCheck,
   Building2,
   Menu,
   X,
+  Search,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -90,6 +92,8 @@ export const CustomerPortal: React.FC = () => {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'shops' | 'appointments' | 'profile'>('shops');
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Shops State
   const [shops, setShops] = useState<Shop[]>([]);
@@ -119,7 +123,6 @@ export const CustomerPortal: React.FC = () => {
 
   // Cancellation State
   const [cancellingId, setCancellingId] = useState<string | null>(null);
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
 
   const fetchShops = async () => {
     setIsLoadingShops(true);
@@ -252,268 +255,374 @@ export const CustomerPortal: React.FC = () => {
     }
   };
 
+  const filteredShops = shops.filter((s) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.city.toLowerCase().includes(q);
+  });
+
   return (
-    <div className="min-h-screen bg-chairly-bg flex flex-col">
-      {/* Top Header */}
-      <header className="bg-white border-b border-chairly-border sticky top-0 z-30 shadow-2xs safe-area-pt">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-chairly-bg flex flex-col antialiased">
+      {/* Sleek, Minimal, Razor-Sharp Header */}
+      <header className="bg-white/95 backdrop-blur-md border-b border-zinc-200 sticky top-0 z-40 shadow-xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+          {/* Brand */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-chairly-terracotta-500 text-white flex items-center justify-center font-bold text-lg shadow-2xs">
-                C
-              </div>
-              <div>
-                <span className="text-base sm:text-lg font-bold text-chairly-dark tracking-tight leading-tight block">
-                  Chairly
-                </span>
-                <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Mijoz Portali
-                </span>
+            <span className="text-sm sm:text-base font-black tracking-[0.25em] uppercase text-black">
+              CHAIRLY
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-zinc-100 text-zinc-600 border border-zinc-200">
+              Mijoz
+            </span>
+          </div>
+
+          {/* Right Header Actions: Notification Bell + Hamburger Menu */}
+          <div className="flex items-center gap-2">
+            <NotificationsBell />
+            <button
+              type="button"
+              onClick={() => setMobileDrawerOpen(true)}
+              className="w-9 h-9 rounded-md bg-zinc-100 hover:bg-zinc-200 text-black flex items-center justify-center transition-colors"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Slide-Over Navigation Drawer */}
+      {mobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileDrawerOpen(false)}
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative ml-auto w-5/6 max-w-xs bg-white h-full shadow-2xl flex flex-col z-10 border-l border-zinc-200 animate-slide-left">
+            {/* Header */}
+            <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
+              <span className="font-black text-sm tracking-[0.25em] uppercase text-black">
+                CHAIRLY
+              </span>
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(false)}
+                className="w-7 h-7 rounded-md bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* User Info */}
+            <div className="p-4 bg-zinc-50 border-b border-zinc-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-black text-white font-bold text-xs flex items-center justify-center shrink-0">
+                  {user?.firstName?.[0] || 'C'}
+                  {user?.lastName?.[0] || ''}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-zinc-900 truncate">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <p className="text-[11px] text-zinc-500 font-mono truncate">
+                    {user?.phone ? formatPhone(user.phone) : user?.email}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Desktop Navigation Tabs */}
-            <nav className="hidden md:flex items-center gap-1 ml-6 border-l border-chairly-border pl-6">
+            {/* Navigation Options */}
+            <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+              <span className="text-[9px] uppercase tracking-[0.15em] text-zinc-400 font-bold px-2 py-1 block">
+                Menu
+              </span>
+
               <button
-                onClick={() => setActiveTab('shops')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                type="button"
+                onClick={() => {
+                  setActiveTab('shops');
+                  setMobileDrawerOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-xs font-semibold transition-all text-left ${
                   activeTab === 'shops'
-                    ? 'bg-chairly-terracotta-50 text-chairly-terracotta-600'
-                    : 'text-chairly-muted hover:text-chairly-dark hover:bg-chairly-panel'
+                    ? 'bg-black text-white shadow-2xs'
+                    : 'text-zinc-600 hover:text-black hover:bg-zinc-100'
                 }`}
               >
-                {t('nav.barbershops')}
+                <Building2 className="w-4 h-4" />
+                {t('customer.exploreTab')}
               </button>
+
               <button
-                onClick={() => setActiveTab('appointments')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                type="button"
+                onClick={() => {
+                  setActiveTab('appointments');
+                  setMobileDrawerOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md text-xs font-semibold transition-all text-left ${
                   activeTab === 'appointments'
-                    ? 'bg-chairly-terracotta-50 text-chairly-terracotta-600'
-                    : 'text-chairly-muted hover:text-chairly-dark hover:bg-chairly-panel'
+                    ? 'bg-black text-white shadow-2xs'
+                    : 'text-zinc-600 hover:text-black hover:bg-zinc-100'
                 }`}
               >
-                {t('nav.appointments')}
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-4 h-4" />
+                  {t('customer.myBookingsTab')}
+                </div>
                 {appointments.length > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-chairly-terracotta-500 text-white font-bold">
+                  <span className={`px-1.5 py-0.2 text-[10px] font-bold rounded-sm ${
+                    activeTab === 'appointments' ? 'bg-white text-black' : 'bg-zinc-200 text-zinc-800'
+                  }`}>
                     {appointments.length}
                   </span>
                 )}
               </button>
+
               <button
-                onClick={() => setActiveTab('profile')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                type="button"
+                onClick={() => {
+                  setActiveTab('profile');
+                  setMobileDrawerOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-xs font-semibold transition-all text-left ${
                   activeTab === 'profile'
-                    ? 'bg-chairly-terracotta-50 text-chairly-terracotta-600'
-                    : 'text-chairly-muted hover:text-chairly-dark hover:bg-chairly-panel'
+                    ? 'bg-black text-white shadow-2xs'
+                    : 'text-zinc-600 hover:text-black hover:bg-zinc-100'
                 }`}
               >
-                {t('nav.profile')}
+                <User className="w-4 h-4" />
+                {t('customer.profileTab')}
               </button>
+
+              {/* Partner Application Link */}
+              <div className="pt-3 mt-3 border-t border-zinc-200 space-y-1">
+                <span className="text-[9px] uppercase tracking-[0.15em] text-zinc-400 font-bold px-2 py-1 block">
+                  Biznes
+                </span>
+                <a
+                  href="/apply"
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-xs font-bold text-zinc-900 bg-zinc-100 hover:bg-zinc-200 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Scissors className="w-4 h-4 text-black" />
+                    <span>{t('nav.applyBusiness')}</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+                </a>
+              </div>
             </nav>
-          </div>
 
-          {/* Header Controls: Notifications Bell, Language Selector & Profile */}
-          <div className="flex items-center gap-2">
-            <NotificationsBell />
-            <LanguageSelector />
-
-            <button
-              onClick={() => setActiveTab('profile')}
-              className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-chairly-panel transition-colors"
-              title={t('nav.profile')}
-            >
-              <div className="w-8 h-8 rounded-full bg-chairly-terracotta-100 text-chairly-terracotta-700 font-bold text-xs flex items-center justify-center border border-chairly-terracotta-200">
-                {user?.firstName?.[0] || 'C'}
-                {user?.lastName?.[0] || 'U'}
+            {/* Language & Sign out Footer */}
+            <div className="p-4 border-t border-zinc-200 bg-zinc-50 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Til / Язык</span>
+                <LanguageSelector />
               </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-xs font-semibold text-chairly-dark leading-tight">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-[10px] text-chairly-muted leading-tight">
-                  {user?.phone ? formatPhone(user.phone) : user?.email}
-                </p>
-              </div>
-            </button>
 
-            <button
-              onClick={logout}
-              title={t('nav.logout')}
-              className="p-2 rounded-xl text-chairly-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+              <button
+                onClick={() => {
+                  setMobileDrawerOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-md border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                {t('nav.logout')}
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Mobile Navigation Segmented Control (Visible on phone/tablet) */}
-        <div className="md:hidden border-t border-chairly-border bg-white px-2 py-1.5 flex items-center justify-around">
-          <button
-            onClick={() => setActiveTab('shops')}
-            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold flex-1 transition-all min-h-[40px] ${
-              activeTab === 'shops'
-                ? 'bg-chairly-terracotta-50 text-chairly-terracotta-600 shadow-2xs'
-                : 'text-chairly-muted'
-            }`}
-          >
-            <Building2 className="w-4 h-4" />
-            <span>{t('nav.barbershops')}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('appointments')}
-            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold flex-1 transition-all min-h-[40px] ${
-              activeTab === 'appointments'
-                ? 'bg-chairly-terracotta-50 text-chairly-terracotta-600 shadow-2xs'
-                : 'text-chairly-muted'
-            }`}
-          >
-            <Calendar className="w-4 h-4" />
-            <span>{t('nav.appointments')}</span>
-            {appointments.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-chairly-terracotta-500 text-white font-bold">
-                {appointments.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold flex-1 transition-all min-h-[40px] ${
-              activeTab === 'profile'
-                ? 'bg-chairly-terracotta-50 text-chairly-terracotta-600 shadow-2xs'
-                : 'text-chairly-muted'
-            }`}
-          >
-            <User className="w-4 h-4" />
-            <span>{t('nav.profile')}</span>
-          </button>
-        </div>
-      </header>
+      )}
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full pb-20">
-        {/* Promotional Barbershop Application Banner */}
-        <div className="mb-6 sm:mb-8 bg-linear-to-r from-amber-50/80 via-orange-50/50 to-stone-50 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-chairly-terracotta-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
-              <Scissors className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-chairly-dark">
-                {t('auth.barbershopPromoTitle')}
-              </h3>
-              <p className="text-xs text-chairly-body mt-0.5">
-                {t('auth.barbershopPromoDesc')}
-              </p>
-            </div>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full pb-16">
+        {/* Crisp Segmented Tab Selector */}
+        <div className="mb-6 flex justify-center sm:justify-start">
+          <div className="inline-flex p-1 bg-zinc-100 border border-zinc-200 rounded-md gap-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab('shops')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-sm transition-all ${
+                activeTab === 'shops'
+                  ? 'bg-black text-white shadow-2xs'
+                  : 'text-zinc-600 hover:text-black'
+              }`}
+            >
+              {t('customer.exploreTab')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('appointments')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-sm transition-all flex items-center gap-1.5 ${
+                activeTab === 'appointments'
+                  ? 'bg-black text-white shadow-2xs'
+                  : 'text-zinc-600 hover:text-black'
+              }`}
+            >
+              {t('customer.myBookingsTab')}
+              {appointments.length > 0 && (
+                <span className={`px-1.5 py-0.2 text-[10px] font-bold rounded-xs ${
+                  activeTab === 'appointments' ? 'bg-zinc-800 text-white' : 'bg-zinc-200 text-zinc-800'
+                }`}>
+                  {appointments.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('profile')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-sm transition-all ${
+                activeTab === 'profile'
+                  ? 'bg-black text-white shadow-2xs'
+                  : 'text-zinc-600 hover:text-black'
+              }`}
+            >
+              {t('customer.profileTab')}
+            </button>
           </div>
-          <a
-            href="/apply"
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-chairly-dark hover:bg-black text-white text-xs font-semibold rounded-xl transition-colors shrink-0 shadow-2xs self-start sm:self-auto"
-          >
-            {t('auth.applyButton')}
-            <ChevronRight className="w-4 h-4" />
-          </a>
         </div>
 
+        {/* 1. SHOPS VIEW */}
         {activeTab === 'shops' && (
-          <div>
-            <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="space-y-6 sm:space-y-8">
+            {/* Minimal Editorial Hero */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-zinc-200">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-chairly-dark">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">
                   {t('portal.discoverTitle')}
                 </h1>
-                <p className="text-xs sm:text-sm text-chairly-muted mt-0.5">
+                <p className="text-xs sm:text-sm text-zinc-500 mt-1">
                   {t('portal.discoverSubtitle')}
                 </p>
               </div>
-              <button
-                onClick={fetchShops}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-chairly-border bg-white text-xs font-semibold text-chairly-dark hover:bg-chairly-panel transition-colors self-start sm:self-auto min-h-[38px]"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                {t('common.refresh')}
-              </button>
+
+              {/* Search Bar */}
+              <div className="relative w-full sm:w-72">
+                <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-2.5 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('customer.searchPlaceholder')}
+                  className="w-full bg-white border border-zinc-200 rounded-md pl-9 pr-3 py-1.5 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:border-black transition-colors"
+                />
+              </div>
             </div>
 
-            {isLoadingShops ? (
-              <div className="py-20 flex flex-col items-center justify-center text-chairly-muted gap-3">
-                <div className="w-8 h-8 border-3 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm font-medium">{t('portal.loadingShops')}</p>
+            {/* Sleek Dark Barbershop Partner Invitation Banner */}
+            <div className="bg-zinc-950 text-white border border-zinc-800 rounded-lg p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-400 font-semibold block">
+                  Chairly Partner Network
+                </span>
+                <h3 className="text-sm sm:text-base font-bold text-white">
+                  {t('portal.partnerBannerTitle')}
+                </h3>
+                <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
+                  {t('portal.partnerBannerDesc')}
+                </p>
               </div>
-            ) : shops.length === 0 ? (
-              <div className="bg-white p-8 sm:p-12 rounded-3xl border border-chairly-border text-center max-w-md mx-auto space-y-4">
-                <Building2 className="w-12 h-12 text-chairly-muted mx-auto" />
-                <h3 className="text-base font-bold text-chairly-dark">{t('portal.noShopsTitle')}</h3>
-                <p className="text-xs sm:text-sm text-chairly-muted leading-relaxed">
+              <a
+                href="/apply"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-zinc-200 text-black text-xs font-bold rounded-md transition-colors shrink-0 self-start sm:self-auto shadow-2xs"
+              >
+                {t('portal.applyPartnerButton')}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            {/* Shop Cards Grid */}
+            {isLoadingShops ? (
+              <div className="py-20 flex flex-col items-center justify-center text-zinc-400 gap-3">
+                <div className="w-7 h-7 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <p className="text-xs uppercase tracking-wider font-semibold">{t('portal.loadingShops')}</p>
+              </div>
+            ) : filteredShops.length === 0 ? (
+              <div className="bg-white p-8 sm:p-12 rounded-lg border border-zinc-200 text-center max-w-md mx-auto space-y-4">
+                <Building2 className="w-10 h-10 text-zinc-400 mx-auto" />
+                <h3 className="text-base font-bold text-zinc-900">{t('portal.noShopsTitle')}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">
                   {t('portal.noShopsDesc')}
                 </p>
                 <div className="pt-2">
                   <a
                     href="/apply"
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-chairly-terracotta-500 hover:bg-chairly-terracotta-600 text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-black hover:bg-zinc-800 text-white rounded-md text-xs font-semibold transition-colors"
                   >
-                    <Scissors className="w-4 h-4" />
+                    <Scissors className="w-3.5 h-3.5" />
                     {t('auth.applyButton')}
                   </a>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-                {shops.map((shop) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredShops.map((shop) => (
                   <div
                     key={shop.id}
-                    className="bg-white rounded-3xl border border-chairly-border overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col group"
+                    className="bg-white rounded-lg border border-zinc-200 hover:border-black transition-all overflow-hidden flex flex-col group shadow-xs hover:shadow-md"
                   >
                     {/* Cover Photo */}
-                    <div className="h-44 sm:h-48 relative overflow-hidden bg-chairly-panel">
+                    <div className="h-48 sm:h-52 relative overflow-hidden bg-zinc-100">
                       <img
                         src={
                           shop.coverImageUrl ||
                           'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80'
                         }
                         alt={shop.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
-                      <div className="absolute bottom-3 left-4 right-4 text-white">
-                        <h3 className="font-bold text-lg leading-tight drop-shadow-sm truncate">{shop.name}</h3>
-                        <p className="text-xs text-white/90 flex items-center gap-1 mt-0.5 drop-shadow-sm truncate">
-                          <MapPin className="w-3.5 h-3.5 text-chairly-terracotta-400 shrink-0" />
-                          {shop.address}, {shop.city}
+                      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+                      
+                      {/* Location Badge */}
+                      <div className="absolute top-3 left-3">
+                        <span className="text-[9px] uppercase tracking-wider font-bold bg-black/80 text-white px-2 py-0.5 rounded-sm backdrop-blur-xs">
+                          {shop.city || 'Tashkent'}
+                        </span>
+                      </div>
+
+                      <div className="absolute bottom-3 left-3.5 right-3.5 text-white">
+                        <h3 className="font-bold text-base sm:text-lg leading-tight truncate">{shop.name}</h3>
+                        <p className="text-xs text-zinc-300 flex items-center gap-1 mt-0.5 truncate">
+                          <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                          {shop.address}
                         </p>
                       </div>
                     </div>
 
-                    {/* Shop Body */}
-                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
+                    {/* Card Content */}
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
                       <div>
-                        <p className="text-xs text-chairly-body line-clamp-2 mb-2 leading-relaxed">
-                          {shop.description}
+                        <p className="text-xs text-zinc-600 line-clamp-2 leading-relaxed">
+                          {shop.description || 'Professional barbershop services in Tashkent.'}
                         </p>
-                        <p className="text-xs text-chairly-muted flex items-center gap-1 font-medium">
-                          <Phone className="w-3 h-3 text-chairly-terracotta-500 shrink-0" />
-                          {shop.phone}
-                        </p>
+                        {shop.phone && (
+                          <p className="text-[11px] text-zinc-500 flex items-center gap-1 font-mono mt-2">
+                            <Phone className="w-3 h-3 text-zinc-400 shrink-0" />
+                            {shop.phone}
+                          </p>
+                        )}
                       </div>
 
-                      <div className="pt-3 border-t border-chairly-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-3">
                         <div>
-                          <span className="text-[10px] uppercase tracking-wider text-chairly-muted font-bold block">
-                            Starting from
+                          <span className="text-[9px] uppercase tracking-widest text-zinc-400 font-bold block">
+                            {t('customer.startingFrom')}
                           </span>
-                          <span className="text-sm font-bold text-chairly-dark">
-                            {shop.startingPrice ? `${shop.startingPrice.toLocaleString()} UZS` : '100,000 UZS'}
+                          <span className="text-sm font-black text-zinc-900">
+                            {shop.startingPrice ? `${shop.startingPrice.toLocaleString()} UZS` : '50,000 UZS'}
                           </span>
                         </div>
 
                         <button
+                          type="button"
                           onClick={() => openBookingModal(shop)}
-                          className="w-full sm:w-auto px-4 py-2.5 bg-chairly-terracotta-500 hover:bg-chairly-terracotta-600 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs min-h-[44px]"
+                          className="px-4 py-2 bg-black hover:bg-zinc-800 text-white rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
                         >
-                          Book Appointment
-                          <ChevronRight className="w-4 h-4" />
+                          {t('customer.bookAppointment')}
+                          <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
@@ -524,46 +633,50 @@ export const CustomerPortal: React.FC = () => {
           </div>
         )}
 
-        {/* My Appointments Tab */}
+        {/* 2. APPOINTMENTS VIEW */}
         {activeTab === 'appointments' && (
-          <div>
-            <div className="mb-6 sm:mb-8 flex items-center justify-between">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-200">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-chairly-dark">My Bookings</h1>
-                <p className="text-xs sm:text-sm text-chairly-muted mt-0.5">
-                  View appointment status, reference numbers, or cancel if your schedule changes.
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">
+                  {t('customer.myBookingsTab')}
+                </h1>
+                <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
+                  Qabul holati va bron ma'lumotlari
                 </p>
               </div>
               <button
+                type="button"
                 onClick={fetchAppointments}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-chairly-border bg-white text-xs font-semibold text-chairly-dark hover:bg-chairly-panel transition-colors min-h-[38px]"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-200 bg-white text-xs font-semibold text-zinc-900 hover:bg-zinc-50 transition-colors shadow-2xs"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Refresh
+                <RefreshCw className="w-3 h-3 text-zinc-500" />
+                {t('common.refresh')}
               </button>
             </div>
 
             {isLoadingAppointments ? (
-              <div className="py-20 flex flex-col items-center justify-center text-chairly-muted gap-3">
-                <div className="w-8 h-8 border-3 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm font-medium">Loading your bookings...</p>
+              <div className="py-20 flex flex-col items-center justify-center text-zinc-400 gap-3">
+                <div className="w-7 h-7 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <p className="text-xs uppercase tracking-wider font-semibold">{t('common.loading')}</p>
               </div>
             ) : appointments.length === 0 ? (
-              <div className="bg-white p-8 sm:p-12 rounded-3xl border border-chairly-border text-center max-w-md mx-auto space-y-3">
-                <Calendar className="w-12 h-12 text-chairly-muted mx-auto" />
-                <h3 className="text-base font-bold text-chairly-dark">No Appointments Found</h3>
-                <p className="text-xs sm:text-sm text-chairly-muted">
-                  You don't have any bookings scheduled yet. Browse top barbershops and reserve your spot!
+              <div className="bg-white p-8 sm:p-12 rounded-lg border border-zinc-200 text-center max-w-md mx-auto space-y-4">
+                <Calendar className="w-10 h-10 text-zinc-400 mx-auto" />
+                <h3 className="text-base font-bold text-zinc-900">{t('customer.noBookings')}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Sizda hali bron qilingan qabullar mavjud emas. Sara sartaroshxonalarni ko'rib chiqing va yoziling.
                 </p>
                 <button
+                  type="button"
                   onClick={() => setActiveTab('shops')}
-                  className="px-5 py-2.5 bg-chairly-terracotta-500 hover:bg-chairly-terracotta-600 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+                  className="px-4 py-2 bg-black hover:bg-zinc-800 text-white rounded-md text-xs font-bold transition-colors shadow-xs"
                 >
-                  Browse Barbershops
+                  {t('customer.exploreTab')}
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {appointments.map((appt) => {
                   const isUpcoming =
                     ['CONFIRMED', 'PENDING', 'CHECKED_IN', 'IN_PROGRESS'].includes(appt.status) &&
@@ -572,67 +685,66 @@ export const CustomerPortal: React.FC = () => {
                   return (
                     <div
                       key={appt.id}
-                      className="bg-white rounded-3xl border border-chairly-border p-5 sm:p-6 shadow-2xs hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6"
+                      className="bg-white rounded-lg border border-zinc-200 p-4 sm:p-5 shadow-xs hover:border-zinc-400 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
-                      <div className="flex items-start gap-3.5">
-                        <div className="w-11 h-11 rounded-2xl bg-chairly-bg border border-chairly-border flex items-center justify-center shrink-0">
-                          <Scissors className="w-5 h-5 text-chairly-terracotta-600" />
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <span className="text-xs font-mono font-bold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-sm">
+                            {appt.bookingReference}
+                          </span>
+                          <h3 className="text-sm sm:text-base font-bold text-zinc-900">{appt.serviceName}</h3>
+                          <span
+                            className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm border ${
+                              appt.status === 'CONFIRMED'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                : appt.status === 'PENDING'
+                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                : appt.status === 'COMPLETED'
+                                ? 'bg-zinc-100 text-zinc-700 border-zinc-200'
+                                : 'bg-rose-50 text-rose-800 border-rose-200'
+                            }`}
+                          >
+                            {appt.status}
+                          </span>
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-base font-bold text-chairly-dark">{appt.serviceName}</h3>
-                            <span
-                              className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
-                                appt.status === 'CONFIRMED'
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : appt.status === 'PENDING'
-                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                  : appt.status === 'COMPLETED'
-                                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                  : 'bg-rose-50 text-rose-700 border border-rose-200'
-                              }`}
-                            >
-                              {appt.status}
-                            </span>
-                          </div>
 
-                          <p className="text-xs font-semibold text-chairly-terracotta-600 mt-1">
-                            {appt.shopName}
-                          </p>
+                        <p className="text-xs font-bold text-black">
+                          {appt.shopName}
+                        </p>
 
-                          <div className="flex items-center gap-3 sm:gap-4 flex-wrap text-xs text-chairly-muted mt-2">
-                            <span className="flex items-center gap-1 font-medium">
-                              <Calendar className="w-3.5 h-3.5 text-chairly-terracotta-500 shrink-0" />
-                              {format(new Date(appt.startTime), 'EEE, MMM d, yyyy')}
-                            </span>
-                            <span className="flex items-center gap-1 font-medium">
-                              <Clock className="w-3.5 h-3.5 text-chairly-terracotta-500 shrink-0" />
-                              {format(new Date(appt.startTime), 'HH:mm')} - {format(new Date(appt.endTime), 'HH:mm')}
-                            </span>
-                            <span className="flex items-center gap-1 font-medium">
-                              <User className="w-3.5 h-3.5 text-chairly-terracotta-500 shrink-0" />
-                              {appt.barberName}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-4 flex-wrap text-xs text-zinc-500">
+                          <span className="flex items-center gap-1 font-medium">
+                            <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                            {format(new Date(appt.startTime), 'EEE, d MMM yyyy')}
+                          </span>
+                          <span className="flex items-center gap-1 font-medium">
+                            <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                            {format(new Date(appt.startTime), 'HH:mm')} - {format(new Date(appt.endTime), 'HH:mm')}
+                          </span>
+                          <span className="flex items-center gap-1 font-medium">
+                            <User className="w-3.5 h-3.5 text-zinc-400" />
+                            {appt.barberName}
+                          </span>
                         </div>
                       </div>
 
                       {/* Right column: Price & Cancel */}
-                      <div className="flex items-center justify-between md:justify-end gap-4 pt-3 md:pt-0 border-t md:border-t-0 border-chairly-border">
+                      <div className="flex items-center justify-between md:justify-end gap-4 pt-3 md:pt-0 border-t md:border-t-0 border-zinc-100">
                         <div className="md:text-right">
-                          <span className="text-[10px] uppercase font-bold text-chairly-muted block">Total</span>
-                          <span className="text-sm font-bold text-chairly-dark">
+                          <span className="text-[9px] uppercase tracking-widest text-zinc-400 font-bold block">Jami</span>
+                          <span className="text-sm font-black text-zinc-900">
                             {appt.servicePrice.toLocaleString()} {appt.currency}
                           </span>
                         </div>
 
                         {isUpcoming && (
                           <button
+                            type="button"
                             onClick={() => handleCancelAppointment(appt.id)}
                             disabled={cancellingId === appt.id}
-                            className="px-3.5 py-2 rounded-xl border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold transition-colors disabled:opacity-50 min-h-[40px]"
+                            className="px-3 py-1.5 rounded-md border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold transition-colors disabled:opacity-50"
                           >
-                            {cancellingId === appt.id ? 'Cancelling...' : 'Cancel'}
+                            {cancellingId === appt.id ? 'Bekor qilinmoqda...' : t('customer.cancelBooking')}
                           </button>
                         )}
                       </div>
@@ -644,7 +756,7 @@ export const CustomerPortal: React.FC = () => {
           </div>
         )}
 
-        {/* Profile Tab */}
+        {/* 3. PROFILE VIEW */}
         {activeTab === 'profile' && (
           <div>
             <Profile />
@@ -652,203 +764,200 @@ export const CustomerPortal: React.FC = () => {
         )}
       </main>
 
-      {/* FULL RESPONSIVE BOOKING MODAL */}
+      {/* RAZOR-SHARP MODERN BOOKING MODAL */}
       {selectedShop && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-xl w-full border border-chairly-border shadow-2xl overflow-hidden my-auto max-h-[94vh] flex flex-col animate-scale-up">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-xl w-full border border-zinc-200 shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col animate-scale-up">
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-chairly-bg border-b border-chairly-border flex items-center justify-between shrink-0">
+            <div className="p-4 sm:p-5 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between shrink-0">
               <div className="min-w-0 pr-3">
-                <h3 className="text-base sm:text-lg font-bold text-chairly-dark truncate">{selectedShop.name}</h3>
-                <p className="text-xs text-chairly-muted flex items-center gap-1 mt-0.5 truncate">
-                  <MapPin className="w-3.5 h-3.5 text-chairly-terracotta-500 shrink-0" />
-                  {selectedShop.address}, {selectedShop.city}
+                <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-zinc-500 block">
+                  Qabulga yozilish
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-zinc-900 truncate">{selectedShop.name}</h3>
+                <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5 truncate">
+                  <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                  {selectedShop.address}
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedShop(null)}
-                className="w-8 h-8 rounded-full bg-white border border-chairly-border flex items-center justify-center text-chairly-muted hover:text-chairly-dark shrink-0"
+                className="w-8 h-8 rounded-md bg-white border border-zinc-200 flex items-center justify-center text-zinc-500 hover:text-black shrink-0 transition-colors"
               >
                 ✕
               </button>
             </div>
 
-            {/* Modal Scrollable Body */}
+            {/* Modal Body */}
             <div className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1">
               {bookingSuccess ? (
                 <div className="text-center py-6 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
-                    <CheckCircle className="w-8 h-8" />
+                  <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-2xs">
+                    <CheckCircle className="w-7 h-7" />
                   </div>
                   <div>
-                    <h4 className="text-xl font-bold text-chairly-dark">Booking Confirmed!</h4>
-                    <p className="text-xs sm:text-sm text-chairly-muted mt-1">
-                      Your appointment has been reserved successfully in Tashkent.
+                    <h4 className="text-lg font-bold text-zinc-900">{t('customer.bookingSuccess')}</h4>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Sizning qabulingiz muvaffaqiyatli band qilindi.
                     </p>
                   </div>
-                  <div className="bg-chairly-bg p-4 rounded-2xl border border-chairly-border max-w-sm mx-auto text-left text-xs space-y-1.5 font-mono">
+                  <div className="bg-zinc-50 p-4 rounded-md border border-zinc-200 max-w-sm mx-auto text-left text-xs space-y-1.5 font-mono">
                     <p>
-                      <strong className="text-chairly-dark">Reference:</strong> {bookingSuccess.bookingReference}
+                      <strong className="text-zinc-900 font-sans">Raqam:</strong> {bookingSuccess.bookingReference}
                     </p>
                     <p>
-                      <strong className="text-chairly-dark">Service:</strong> {bookingSuccess.serviceName}
+                      <strong className="text-zinc-900 font-sans">Xizmat:</strong> {bookingSuccess.serviceName}
                     </p>
                     <p>
-                      <strong className="text-chairly-dark">Barber:</strong> {bookingSuccess.barberName}
-                    </p>
-                    <p>
-                      <strong className="text-chairly-dark">Date & Time:</strong>{' '}
-                      {format(new Date(bookingSuccess.startTime), 'MMM d, yyyy @ HH:mm')}
-                    </p>
-                    <p>
-                      <strong className="text-chairly-dark">Total:</strong>{' '}
-                      {bookingSuccess.servicePrice?.toLocaleString()} {bookingSuccess.currency}
+                      <strong className="text-zinc-900 font-sans">Sana:</strong> {format(new Date(bookingSuccess.startTime), 'd MMM yyyy, HH:mm')}
                     </p>
                   </div>
-                  <div className="pt-2 flex justify-center gap-3">
-                    <button
-                      onClick={() => {
-                        setSelectedShop(null);
-                        setActiveTab('appointments');
-                      }}
-                      className="px-6 py-2.5 bg-chairly-terracotta-500 text-white rounded-xl text-xs font-semibold hover:bg-chairly-terracotta-600 transition-colors shadow-sm min-h-[44px]"
-                    >
-                      View in My Bookings
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedShop(null);
+                      setActiveTab('appointments');
+                    }}
+                    className="px-5 py-2.5 bg-black hover:bg-zinc-800 text-white rounded-md text-xs font-bold transition-colors shadow-2xs"
+                  >
+                    Buyurtmalarni ko'rish
+                  </button>
                 </div>
               ) : (
                 <>
                   {bookingError && (
-                    <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+                    <div className="p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 shrink-0" />
                       <span>{bookingError}</span>
                     </div>
                   )}
 
-                  {/* 1. Choose Service */}
+                  {/* 1. Xizmat turi */}
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-chairly-dark block mb-2">
-                      1. Select Service
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block mb-2">
+                      1. {t('customer.selectService')}
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {shopServices.map((svc) => (
-                        <button
-                          key={svc.id}
-                          type="button"
-                          onClick={() => setSelectedService(svc)}
-                          className={`p-3 rounded-xl border text-left transition-all ${
-                            selectedService?.id === svc.id
-                              ? 'border-chairly-terracotta-500 bg-chairly-terracotta-50/50 ring-2 ring-chairly-terracotta-500/20'
-                              : 'border-chairly-border bg-white hover:bg-chairly-panel'
-                          }`}
-                        >
-                          <p className="text-xs sm:text-sm font-bold text-chairly-dark truncate">{svc.name}</p>
-                          <div className="flex items-center justify-between text-xs mt-1">
-                            <span className="text-chairly-terracotta-600 font-semibold">
-                              {svc.price.toLocaleString()} UZS
-                            </span>
-                            <span className="text-chairly-muted">{svc.durationMinutes} min</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 2. Choose Barber */}
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-chairly-dark block mb-2">
-                      2. Select Barber
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedBarber(null)}
-                        className={`p-2.5 rounded-xl border text-left transition-all ${
-                          selectedBarber === null
-                            ? 'border-chairly-terracotta-500 bg-chairly-terracotta-50/50 ring-2 ring-chairly-terracotta-500/20'
-                            : 'border-chairly-border bg-white hover:bg-chairly-panel'
-                        }`}
-                      >
-                        <p className="text-xs font-bold text-chairly-dark">Any Barber</p>
-                        <p className="text-[10px] text-chairly-muted">Fastest slot</p>
-                      </button>
-
-                      {shopBarbers.map((b) => (
-                        <button
-                          key={b.id}
-                          type="button"
-                          onClick={() => setSelectedBarber(b)}
-                          className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 ${
-                            selectedBarber?.id === b.id
-                              ? 'border-chairly-terracotta-500 bg-chairly-terracotta-50/50 ring-2 ring-chairly-terracotta-500/20'
-                              : 'border-chairly-border bg-white hover:bg-chairly-panel'
-                          }`}
-                        >
-                          <div className="w-7 h-7 rounded-full bg-chairly-panel border border-chairly-border flex items-center justify-center font-bold text-[10px] text-chairly-dark shrink-0">
-                            {b.name[0]}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-chairly-dark truncate">{b.name}</p>
-                            <p className="text-[10px] text-chairly-muted truncate">{b.specialty || 'Master'}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 3. Choose Date */}
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-chairly-dark block mb-2">
-                      3. Select Date
-                    </label>
-                    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                      {[0, 1, 2, 3, 4, 5, 6].map((offset) => {
-                        const d = addDays(new Date(), offset);
-                        const dStr = format(d, 'yyyy-MM-dd');
-                        const isSelected = selectedDate === dStr;
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto p-0.5">
+                      {shopServices.map((service) => {
+                        const isSelected = selectedService?.id === service.id;
                         return (
                           <button
-                            key={dStr}
+                            key={service.id}
                             type="button"
-                            onClick={() => setSelectedDate(dStr)}
-                            className={`px-3 py-2 rounded-xl border text-center shrink-0 transition-all min-w-[60px] ${
+                            onClick={() => setSelectedService(service)}
+                            className={`p-3 rounded-md border text-left transition-all flex flex-col justify-between ${
                               isSelected
-                                ? 'border-chairly-terracotta-500 bg-chairly-terracotta-500 text-white font-semibold shadow-xs'
-                                : 'border-chairly-border bg-white text-chairly-dark hover:bg-chairly-panel'
+                                ? 'border-black bg-zinc-900 text-white shadow-xs'
+                                : 'border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400'
                             }`}
                           >
-                            <p className="text-[10px] uppercase">{format(d, 'EEE')}</p>
-                            <p className="text-xs sm:text-sm font-bold">{format(d, 'd MMM')}</p>
+                            <span className="text-xs font-bold leading-tight">{service.name}</span>
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-zinc-100/20 text-[11px]">
+                              <span className={isSelected ? 'text-zinc-300' : 'text-zinc-500'}>
+                                {service.durationMinutes} min
+                              </span>
+                              <span className="font-bold">
+                                {service.price.toLocaleString()} UZS
+                              </span>
+                            </div>
                           </button>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* 4. Choose Time Slot (Responsive 3/4/6 column grid) */}
+                  {/* 2. Usta tanlash */}
+                  {shopBarbers.length > 0 && (
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block mb-2">
+                        2. {t('customer.selectBarber')}
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBarber(null)}
+                          className={`p-2.5 rounded-md border text-xs font-semibold text-center transition-all ${
+                            selectedBarber === null
+                              ? 'border-black bg-black text-white'
+                              : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400'
+                          }`}
+                        >
+                          {t('customer.anyBarber')}
+                        </button>
+                        {shopBarbers.map((barber) => {
+                          const isSelected = selectedBarber?.id === barber.id;
+                          return (
+                            <button
+                              key={barber.id}
+                              type="button"
+                              onClick={() => setSelectedBarber(barber)}
+                              className={`p-2.5 rounded-md border text-xs font-semibold text-center transition-all truncate ${
+                                isSelected
+                                  ? 'border-black bg-black text-white'
+                                  : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400'
+                              }`}
+                            >
+                              {barber.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. Sana tanlash */}
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block mb-2">
+                      3. {t('customer.selectDate')}
+                    </label>
+                    <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
+                      {[0, 1, 2, 3, 4, 5, 6].map((offset) => {
+                        const d = addDays(new Date(), offset);
+                        const dateStr = format(d, 'yyyy-MM-dd');
+                        const isSelected = selectedDate === dateStr;
+                        return (
+                          <button
+                            key={dateStr}
+                            type="button"
+                            onClick={() => setSelectedDate(dateStr)}
+                            className={`py-2 px-1 rounded-md border text-center transition-all ${
+                              isSelected
+                                ? 'border-black bg-black text-white shadow-xs font-bold'
+                                : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400'
+                            }`}
+                          >
+                            <p className="text-[9px] uppercase tracking-wider">{format(d, 'EEE')}</p>
+                            <p className="text-xs font-bold mt-0.5">{format(d, 'd MMM')}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 4. Vaqt oralig'i */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-bold uppercase tracking-wider text-chairly-dark block">
-                        4. Available Time Slots
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
+                        4. {t('customer.selectTime')}
                       </label>
                       {availableSlots.length > 0 && (
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                          {availableSlots.length} available
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-sm border border-emerald-200">
+                          {availableSlots.length} bo'sh vaqt
                         </span>
                       )}
                     </div>
                     {isLoadingSlots ? (
-                      <div className="py-6 flex justify-center items-center gap-2 text-xs text-chairly-muted">
-                        <div className="w-4 h-4 border-2 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin" />
-                        Calculating available slots...
+                      <div className="py-6 flex justify-center items-center gap-2 text-xs text-zinc-500">
+                        <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        Vaqtlar hisoblanmoqda...
                       </div>
                     ) : availableSlots.length === 0 ? (
-                      <p className="text-xs text-chairly-muted py-4 text-center bg-chairly-panel rounded-xl">
-                        No available slots for this date. Please choose another date or barber.
+                      <p className="text-xs text-zinc-500 py-4 text-center bg-zinc-50 rounded-md border border-zinc-200">
+                        Ushbu sana uchun bo'sh vaqt topilmadi. Boshqa sanani tanlang.
                       </p>
                     ) : (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 max-h-48 overflow-y-auto p-1">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 max-h-44 overflow-y-auto p-0.5">
                         {availableSlots.map((slot) => {
                           const isSelected =
                             selectedSlot?.isoString === slot.isoString ||
@@ -858,10 +967,10 @@ export const CustomerPortal: React.FC = () => {
                               key={slot.isoString || slot.time}
                               type="button"
                               onClick={() => setSelectedSlot(slot)}
-                              className={`py-2 px-1 rounded-xl text-xs font-bold transition-all border min-h-[42px] ${
+                              className={`py-2 px-1 rounded-md text-xs font-mono font-bold transition-all border ${
                                 isSelected
-                                  ? 'bg-chairly-terracotta-500 text-white border-chairly-terracotta-600 shadow-xs ring-2 ring-chairly-terracotta-500/20'
-                                  : 'bg-white text-chairly-dark border-chairly-border hover:bg-chairly-panel'
+                                  ? 'bg-black text-white border-black shadow-xs ring-1 ring-black'
+                                  : 'bg-white text-zinc-900 border-zinc-200 hover:border-black'
                               }`}
                             >
                               {slot.time}
@@ -872,29 +981,31 @@ export const CustomerPortal: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Customer Notes */}
+                  {/* Qo'shimcha izoh */}
                   <div>
-                    <label className="text-xs font-semibold text-chairly-muted uppercase tracking-wider block mb-1">
-                      Notes for Barber (optional)
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block mb-1">
+                      {t('customer.notesLabel')}
                     </label>
                     <input
                       type="text"
                       value={customerNotes}
                       onChange={(e) => setCustomerNotes(e.target.value)}
-                      placeholder="e.g. Skin fade with beard trim"
-                      className="w-full px-3 py-2 rounded-xl border border-chairly-border text-xs text-chairly-dark"
+                      placeholder={t('customer.notesPlaceholder')}
+                      className="w-full px-3 py-2 rounded-md border border-zinc-200 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:border-black transition-colors"
                     />
                   </div>
                 </>
               )}
             </div>
 
-            {/* Modal Sticky Footer */}
+            {/* Modal Footer */}
             {!bookingSuccess && (
-              <div className="p-4 bg-chairly-bg border-t border-chairly-border flex items-center justify-between shrink-0">
+              <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-between shrink-0">
                 <div>
-                  <span className="text-[10px] text-chairly-muted uppercase font-bold block">Estimated Total</span>
-                  <span className="text-sm font-bold text-chairly-dark">
+                  <span className="text-[9px] text-zinc-400 uppercase tracking-widest font-bold block">
+                    {t('customer.price')}
+                  </span>
+                  <span className="text-sm font-black text-zinc-900">
                     {selectedService ? `${selectedService.price.toLocaleString()} UZS` : '—'}
                   </span>
                 </div>
@@ -903,9 +1014,9 @@ export const CustomerPortal: React.FC = () => {
                   type="button"
                   onClick={handleConfirmBooking}
                   disabled={!selectedSlot || isSubmittingBooking}
-                  className="px-6 py-2.5 bg-chairly-terracotta-500 hover:bg-chairly-terracotta-600 disabled:opacity-40 text-white rounded-xl text-xs font-semibold shadow-xs transition-all min-h-[44px]"
+                  className="px-5 py-2 bg-black hover:bg-zinc-800 disabled:opacity-40 text-white rounded-md text-xs font-bold shadow-xs transition-all"
                 >
-                  {isSubmittingBooking ? 'Reserving...' : 'Confirm Booking'}
+                  {isSubmittingBooking ? 'Band qilinmoqda...' : t('customer.confirmBooking')}
                 </button>
               </div>
             )}

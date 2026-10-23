@@ -134,9 +134,9 @@ export const Settings: React.FC = () => {
 
   if (isLoading || !settings) {
     return (
-      <div className="p-16 text-center bg-white rounded-2xl border border-chairly-border">
-        <div className="w-8 h-8 border-3 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-sm font-medium text-chairly-muted">Loading shop configuration...</p>
+      <div className="p-16 text-center bg-white rounded-lg border border-zinc-200">
+        <div className="w-8 h-8 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-xs font-medium text-zinc-500">Loading shop configuration...</p>
       </div>
     );
   }
@@ -144,29 +144,29 @@ export const Settings: React.FC = () => {
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-zinc-200">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-chairly-dark">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950">
             Shop Settings & Policies
           </h2>
-          <p className="text-sm text-chairly-muted mt-0.5">
+          <p className="text-xs text-zinc-500 mt-0.5">
             Configure contact details, booking lead time, cancellation deadlines, and operating hours
           </p>
         </div>
       </div>
 
       {saveSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm font-medium flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-emerald-600" />
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-emerald-800 text-xs font-medium flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-emerald-600" />
           Settings and working hours saved successfully!
         </div>
       )}
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Basic Shop Info */}
-        <div className="bg-white p-6 rounded-2xl border border-chairly-border shadow-2xs space-y-4">
-          <h3 className="font-bold text-chairly-dark text-base flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-chairly-terracotta-500" />
+        <div className="bg-white p-6 rounded-lg border border-zinc-200/80 shadow-xs space-y-4">
+          <h3 className="font-bold text-zinc-950 text-sm flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-zinc-600" />
             Barbershop Profile
           </h3>
 
@@ -272,15 +272,15 @@ export const Settings: React.FC = () => {
         </div>
 
         {/* Booking Policies */}
-        <div className="bg-white p-6 rounded-2xl border border-chairly-border shadow-2xs space-y-4">
-          <h3 className="font-bold text-chairly-dark text-base flex items-center gap-2">
-            <Shield className="w-4 h-4 text-chairly-terracotta-500" />
+        <div className="bg-white p-6 rounded-lg border border-zinc-200/80 shadow-xs space-y-4">
+          <h3 className="font-bold text-zinc-950 text-sm flex items-center gap-2">
+            <Shield className="w-4 h-4 text-zinc-600" />
             Booking & Cancellation Policies
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-chairly-muted block mb-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1">
                 Lead Time (Minutes)
               </label>
               <input
@@ -291,15 +291,15 @@ export const Settings: React.FC = () => {
                 onChange={(e) => setLeadTimeMinutes(Number(e.target.value))}
                 required
                 disabled={!isOwner}
-                className="w-full bg-chairly-bg/50 border border-chairly-border rounded-xl px-3.5 py-2 text-sm text-chairly-dark focus:bg-white focus:outline-none focus:ring-2 focus:ring-chairly-terracotta-500/20 disabled:opacity-60"
+                className="w-full bg-zinc-50/50 border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-950 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 disabled:opacity-60"
               />
-              <span className="text-[11px] text-chairly-muted block mt-1">
+              <span className="text-[10px] text-zinc-400 block mt-1">
                 Minimum advance notice required before a booking starts.
               </span>
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-chairly-muted block mb-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1">
                 Booking Horizon (Days)
               </label>
               <input
@@ -310,15 +310,15 @@ export const Settings: React.FC = () => {
                 onChange={(e) => setHorizonDays(Number(e.target.value))}
                 required
                 disabled={!isOwner}
-                className="w-full bg-chairly-bg/50 border border-chairly-border rounded-xl px-3.5 py-2 text-sm text-chairly-dark focus:bg-white focus:outline-none focus:ring-2 focus:ring-chairly-terracotta-500/20 disabled:opacity-60"
+                className="w-full bg-zinc-50/50 border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-950 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 disabled:opacity-60"
               />
-              <span className="text-[11px] text-chairly-muted block mt-1">
+              <span className="text-[10px] text-zinc-400 block mt-1">
                 How far in advance customers can view and reserve time slots.
               </span>
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-chairly-muted block mb-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1">
                 Cancel Deadline (Hours)
               </label>
               <input
@@ -329,32 +329,32 @@ export const Settings: React.FC = () => {
                 onChange={(e) => setCancelDeadlineHours(Number(e.target.value))}
                 required
                 disabled={!isOwner}
-                className="w-full bg-chairly-bg/50 border border-chairly-border rounded-xl px-3.5 py-2 text-sm text-chairly-dark focus:bg-white focus:outline-none focus:ring-2 focus:ring-chairly-terracotta-500/20 disabled:opacity-60"
+                className="w-full bg-zinc-50/50 border border-zinc-200 rounded-md px-3 py-2 text-xs text-zinc-950 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-950 disabled:opacity-60"
               />
-              <span className="text-[11px] text-chairly-muted block mt-1">
+              <span className="text-[10px] text-zinc-400 block mt-1">
                 Appointments cannot be cancelled by customer within this timeframe.
               </span>
             </div>
           </div>
 
-          <div className="pt-2 text-xs text-chairly-muted flex items-center gap-4">
+          <div className="pt-2 text-xs text-zinc-500 flex items-center gap-4">
             <div>
-              Timezone: <span className="font-semibold text-chairly-dark">{settings.timezone}</span>
+              Timezone: <span className="font-semibold text-zinc-950">{settings.timezone}</span>
             </div>
             <div>
-              Currency: <span className="font-semibold text-chairly-dark">{settings.currency}</span>
+              Currency: <span className="font-semibold text-zinc-950">{settings.currency}</span>
             </div>
           </div>
         </div>
 
         {/* Regular Opening Hours */}
-        <div className="bg-white p-6 rounded-2xl border border-chairly-border shadow-2xs space-y-4">
-          <h3 className="font-bold text-chairly-dark text-base flex items-center gap-2">
-            <Clock className="w-4 h-4 text-chairly-terracotta-500" />
+        <div className="bg-white p-6 rounded-lg border border-zinc-200/80 shadow-xs space-y-4">
+          <h3 className="font-bold text-zinc-950 text-sm flex items-center gap-2">
+            <Clock className="w-4 h-4 text-zinc-600" />
             General Shop Opening Hours
           </h3>
 
-          <div className="divide-y divide-chairly-border border border-chairly-border rounded-2xl overflow-hidden">
+          <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md overflow-hidden">
             {workingHours.map((wh, index) => {
               const dayName = DAYS_OF_WEEK.find((d: any) => d.day === wh.dayOfWeek)?.name || 'Day';
               return (
