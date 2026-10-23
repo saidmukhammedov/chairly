@@ -1,9 +1,14 @@
 const getBaseUrl = (): string => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  if (envUrl) return envUrl;
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return '/api';
+  // In any non-localhost browser environment (chairly.uz, vercel.app, custom domains),
+  // always use relative '/api' so requests go directly to our integrated serverless backend.
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      return '/api';
+    }
   }
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl && !envUrl.includes('onrender.com')) return envUrl;
   return 'http://localhost:4000/api';
 };
 
