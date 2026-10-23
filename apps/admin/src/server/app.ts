@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import morgan from 'morgan';
 import { errorHandler } from './middlewares/errorHandler';
 
 // Route imports
@@ -19,9 +18,6 @@ export const app = express();
 // Middlewares
 app.use(cors({ origin: '*' }));
 app.use(express.json());
-if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan('dev'));
-}
 
 // Health Check
 app.get(['/api/health', '/health'], (_req, res) => {
