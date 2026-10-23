@@ -27,6 +27,7 @@ import { Profile } from './Profile';
 import { useTranslation } from '../i18n';
 import { LanguageSelector } from '../i18n/LanguageSelector';
 import { NotificationsBell } from '../components/NotificationsBell';
+import { IosTimeWheel } from '../components/IosTimeWheel';
 import { formatPhone } from '@chairly/shared';
 
 interface Shop {
@@ -206,7 +207,15 @@ export const CustomerPortal: React.FC = () => {
 
   const handleConfirmBooking = async () => {
     if (!selectedShop || !selectedService || !selectedSlot) {
-      setBookingError('Please select a service, date, and available time slot.');
+      setBookingError('Iltimos, xizmat, sana va bo‘sh vaqt oralig‘ini tanlang.');
+      return;
+    }
+
+    // Guard: Prevent selecting past time
+    const slotTimeStr = selectedSlot.isoString || selectedSlot.startTime || `${selectedDate}T${selectedSlot.time}:00`;
+    const slotDate = new Date(slotTimeStr);
+    if (slotDate.getTime() <= Date.now() || !selectedSlot.available) {
+      setBookingError("Ushbu vaqt o'tib ketgan yoki band qilingan. Iltimos, faqat hozirgi vaqtdan keyingi ochiq vaqtni tanlang.");
       return;
     }
 
@@ -935,50 +944,29 @@ export const CustomerPortal: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* 4. Vaqt oralig'i */}
+                  {/* 4. Vaqt oralig'i (iPhone Wheel Picker) */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
                         4. {t('customer.selectTime')}
                       </label>
                       {availableSlots.length > 0 && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-sm border border-emerald-200">
-                          {availableSlots.length} bo'sh vaqt
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-sm border border-zinc-200">
+                          iPhone g‘ildiragi bilan tanlang
                         </span>
                       )}
                     </div>
-                    {isLoadingSlots ? (
-                      <div className="py-6 flex justify-center items-center gap-2 text-xs text-zinc-500">
-                        <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                        Vaqtlar hisoblanmoqda...
-                      </div>
-                    ) : availableSlots.length === 0 ? (
-                      <p className="text-xs text-zinc-500 py-4 text-center bg-zinc-50 rounded-md border border-zinc-200">
-                        Ushbu sana uchun bo'sh vaqt topilmadi. Boshqa sanani tanlang.
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 max-h-44 overflow-y-auto p-0.5">
-                        {availableSlots.map((slot) => {
-                          const isSelected =
-                            selectedSlot?.isoString === slot.isoString ||
-                            selectedSlot?.time === slot.time;
-                          return (
-                            <button
-                              key={slot.isoString || slot.time}
-                              type="button"
-                              onClick={() => setSelectedSlot(slot)}
-                              className={`py-2 px-1 rounded-md text-xs font-mono font-bold transition-all border ${
-                                isSelected
-                                  ? 'bg-black text-white border-black shadow-xs ring-1 ring-black'
-                                  : 'bg-white text-zinc-900 border-zinc-200 hover:border-black'
-                              }`}
-                            >
-                              {slot.time}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
+
+                    <IosTimeWheel
+                      slots={availableSlots}
+                      selectedSlot={selectedSlot}
+                      onSelectSlot={(slot) => {
+                        setSelectedSlot(slot);
+                        setBookingError(null);
+                      }}
+                      selectedDate={selectedDate}
+                      isLoading={isLoadingSlots}
+                    />
                   </div>
 
                   {/* Qo'shimcha izoh */}

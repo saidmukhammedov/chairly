@@ -135,8 +135,9 @@ export async function getAvailableSlots(options: AvailabilityOptions): Promise<T
       resultSlots.push({
         time: timeLabel,
         isoString,
+        startTime: isoString,
         available: false,
-        reason: 'Too late to book or in the past',
+        reason: "O'tib ketgan vaqt yoki bron qilish muddati cheklangan",
       });
       currentSlotStart = addMinutes(currentSlotStart, slotIntervalMinutes);
       continue;

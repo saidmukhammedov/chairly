@@ -55,7 +55,7 @@ export async function createBooking(customerId: string, input: CreateBookingInpu
   const now = new Date();
   const minAllowedTime = addMinutes(now, shop.leadTimeMinutes);
   if (isBefore(requestedStartTime, minAllowedTime)) {
-    throw new AppError(`Appointments must be booked at least ${shop.leadTimeMinutes} minutes in advance`, 400);
+    throw new AppError(`Ushbu vaqt o'tib ketgan yoki kamida ${shop.leadTimeMinutes} daqiqa oldin bron qilish lozim`, 400);
   }
 
   // If "any barber" was chosen, find an eligible active barber

@@ -1568,8 +1568,9 @@ async function getAvailableSlots(options) {
       resultSlots.push({
         time: timeLabel,
         isoString,
+        startTime: isoString,
         available: false,
-        reason: "Too late to book or in the past"
+        reason: "O'tib ketgan vaqt yoki bron qilish muddati cheklangan"
       });
       currentSlotStart = addMinutes2(currentSlotStart, slotIntervalMinutes);
       continue;
@@ -1690,7 +1691,7 @@ async function createBooking(customerId, input) {
   const now = /* @__PURE__ */ new Date();
   const minAllowedTime = addMinutes3(now, shop.leadTimeMinutes);
   if (isBefore3(requestedStartTime, minAllowedTime)) {
-    throw new AppError(`Appointments must be booked at least ${shop.leadTimeMinutes} minutes in advance`, 400);
+    throw new AppError(`Ushbu vaqt o'tib ketgan yoki kamida ${shop.leadTimeMinutes} daqiqa oldin bron qilish lozim`, 400);
   }
   if (!requestedBarberId) {
     const eligibleBarbers = service.barbers.filter((b) => b.barber.isActive).map((b) => b.barberId);
