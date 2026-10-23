@@ -104,7 +104,7 @@ export const ShopManagement: React.FC = () => {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminFirstName, setNewAdminFirstName] = useState('');
   const [newAdminLastName, setNewAdminLastName] = useState('');
-  const [newAdminPassword, setNewAdminPassword] = useState('chairly123');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
   const [newAdminRole, setNewAdminRole] = useState<'OWNER' | 'MANAGER' | 'BARBER'>('OWNER');
   const [isAddingAdmin, setIsAddingAdmin] = useState(false);
 
@@ -142,7 +142,7 @@ export const ShopManagement: React.FC = () => {
       adminEmail: '',
       adminFirstName: '',
       adminLastName: '',
-      adminPassword: 'chairly123',
+      adminPassword: '',
     });
     setIsFormOpen(true);
   };
@@ -220,7 +220,7 @@ export const ShopManagement: React.FC = () => {
     setNewAdminEmail('');
     setNewAdminFirstName('');
     setNewAdminLastName('');
-    setNewAdminPassword('chairly123');
+    setNewAdminPassword('');
     setNewAdminRole('OWNER');
     setIsAdminModalOpen(true);
   };
@@ -683,7 +683,7 @@ export const ShopManagement: React.FC = () => {
                     type="text"
                     value={formData.adminPassword}
                     onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
-                    placeholder="chairly123"
+                    placeholder="Xavfsiz parol kiriting"
                     className="w-full px-3 py-2 rounded-xl border border-chairly-border text-xs text-chairly-dark"
                   />
                 </div>
@@ -843,7 +843,7 @@ export const ShopManagement: React.FC = () => {
                     type="text"
                     value={newAdminPassword}
                     onChange={(e) => setNewAdminPassword(e.target.value)}
-                    placeholder="chairly123"
+                    placeholder="Xavfsiz parol kiriting"
                     className="w-full px-3 py-2 rounded-xl border border-chairly-border text-xs text-chairly-dark"
                   />
                 </div>

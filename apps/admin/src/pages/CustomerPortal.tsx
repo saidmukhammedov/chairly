@@ -22,6 +22,10 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { format, addDays } from 'date-fns';
 import { Profile } from './Profile';
+import { useTranslation } from '../i18n';
+import { LanguageSelector } from '../i18n/LanguageSelector';
+import { NotificationsBell } from '../components/NotificationsBell';
+import { formatPhone } from '@chairly/shared';
 
 interface Shop {
   id: string;
@@ -83,7 +87,8 @@ interface CustomerAppointment {
 }
 
 export const CustomerPortal: React.FC = () => {
-  const { user, logout, login } = useAuth();
+  const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'shops' | 'appointments' | 'profile'>('shops');
 
   // Shops State
@@ -247,15 +252,6 @@ export const CustomerPortal: React.FC = () => {
     }
   };
 
-  const handleQuickSwitch = async (email: string) => {
-    try {
-      await login(email, 'chairly123');
-      window.location.reload();
-    } catch (err: any) {
-      alert('Quick switch failed: ' + err.message);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-chairly-bg flex flex-col">
       {/* Top Header */}
@@ -271,7 +267,7 @@ export const CustomerPortal: React.FC = () => {
                   Chairly
                 </span>
                 <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Customer Portal
+                  Mijoz Portali
                 </span>
               </div>
             </div>
@@ -286,7 +282,7 @@ export const CustomerPortal: React.FC = () => {
                     : 'text-chairly-muted hover:text-chairly-dark hover:bg-chairly-panel'
                 }`}
               >
-                Browse Barbershops
+                {t('nav.barbershops')}
               </button>
               <button
                 onClick={() => setActiveTab('appointments')}
@@ -296,7 +292,7 @@ export const CustomerPortal: React.FC = () => {
                     : 'text-chairly-muted hover:text-chairly-dark hover:bg-chairly-panel'
                 }`}
               >
-                My Bookings
+                {t('nav.appointments')}
                 {appointments.length > 0 && (
                   <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-chairly-terracotta-500 text-white font-bold">
                     {appointments.length}
@@ -311,35 +307,20 @@ export const CustomerPortal: React.FC = () => {
                     : 'text-chairly-muted hover:text-chairly-dark hover:bg-chairly-panel'
                 }`}
               >
-                My Profile
+                {t('nav.profile')}
               </button>
             </nav>
           </div>
 
-          {/* Quick Demo Switcher & Profile Header Controls */}
+          {/* Header Controls: Notifications Bell, Language Selector & Profile */}
           <div className="flex items-center gap-2">
-            <div className="hidden lg:flex items-center gap-1 bg-chairly-panel px-2.5 py-1 rounded-xl border border-chairly-border text-xs">
-              <span className="text-chairly-muted font-medium mr-1">Switch:</span>
-              <button
-                onClick={() => handleQuickSwitch('owner@chopchop.uz')}
-                className="px-2 py-0.5 rounded-md font-semibold text-chairly-dark hover:bg-white transition-all"
-                title="Log in as Barbershop Admin"
-              >
-                💈 Shop Admin
-              </button>
-              <button
-                onClick={() => handleQuickSwitch('admin@chairly.app')}
-                className="px-2 py-0.5 rounded-md font-semibold text-chairly-terracotta-600 hover:bg-white transition-all"
-                title="Log in as Website Owner"
-              >
-                👑 Owner
-              </button>
-            </div>
+            <NotificationsBell />
+            <LanguageSelector />
 
             <button
               onClick={() => setActiveTab('profile')}
               className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-chairly-panel transition-colors"
-              title="Edit Profile"
+              title={t('nav.profile')}
             >
               <div className="w-8 h-8 rounded-full bg-chairly-terracotta-100 text-chairly-terracotta-700 font-bold text-xs flex items-center justify-center border border-chairly-terracotta-200">
                 {user?.firstName?.[0] || 'C'}
@@ -349,13 +330,15 @@ export const CustomerPortal: React.FC = () => {
                 <p className="text-xs font-semibold text-chairly-dark leading-tight">
                   {user?.firstName} {user?.lastName}
                 </p>
-                <p className="text-[10px] text-chairly-muted leading-tight">{user?.email}</p>
+                <p className="text-[10px] text-chairly-muted leading-tight">
+                  {user?.phone ? formatPhone(user.phone) : user?.email}
+                </p>
               </div>
             </button>
 
             <button
               onClick={logout}
-              title="Log Out"
+              title={t('nav.logout')}
               className="p-2 rounded-xl text-chairly-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
             >
               <LogOut className="w-4 h-4" />
@@ -374,7 +357,7 @@ export const CustomerPortal: React.FC = () => {
             }`}
           >
             <Building2 className="w-4 h-4" />
-            <span>Barbershops</span>
+            <span>{t('nav.barbershops')}</span>
           </button>
 
           <button
@@ -386,7 +369,7 @@ export const CustomerPortal: React.FC = () => {
             }`}
           >
             <Calendar className="w-4 h-4" />
-            <span>Bookings</span>
+            <span>{t('nav.appointments')}</span>
             {appointments.length > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-chairly-terracotta-500 text-white font-bold">
                 {appointments.length}
@@ -403,22 +386,46 @@ export const CustomerPortal: React.FC = () => {
             }`}
           >
             <User className="w-4 h-4" />
-            <span>Profile</span>
+            <span>{t('nav.profile')}</span>
           </button>
         </div>
       </header>
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full pb-20">
+        {/* Promotional Barbershop Application Banner */}
+        <div className="mb-6 sm:mb-8 bg-linear-to-r from-amber-50/80 via-orange-50/50 to-stone-50 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-chairly-terracotta-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <Scissors className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-chairly-dark">
+                {t('auth.barbershopPromoTitle')}
+              </h3>
+              <p className="text-xs text-chairly-body mt-0.5">
+                {t('auth.barbershopPromoDesc')}
+              </p>
+            </div>
+          </div>
+          <a
+            href="/apply"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-chairly-dark hover:bg-black text-white text-xs font-semibold rounded-xl transition-colors shrink-0 shadow-2xs self-start sm:self-auto"
+          >
+            {t('auth.applyButton')}
+            <ChevronRight className="w-4 h-4" />
+          </a>
+        </div>
+
         {activeTab === 'shops' && (
           <div>
             <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-chairly-dark">
-                  Discover Barbershops in Tashkent
+                  {t('portal.discoverTitle')}
                 </h1>
                 <p className="text-xs sm:text-sm text-chairly-muted mt-0.5">
-                  Choose a barbershop, pick your favorite barber, and reserve your haircut in seconds.
+                  {t('portal.discoverSubtitle')}
                 </p>
               </div>
               <button
@@ -426,22 +433,31 @@ export const CustomerPortal: React.FC = () => {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-chairly-border bg-white text-xs font-semibold text-chairly-dark hover:bg-chairly-panel transition-colors self-start sm:self-auto min-h-[38px]"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                Refresh
+                {t('common.refresh')}
               </button>
             </div>
 
             {isLoadingShops ? (
               <div className="py-20 flex flex-col items-center justify-center text-chairly-muted gap-3">
                 <div className="w-8 h-8 border-3 border-chairly-terracotta-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm font-medium">Finding premier barbershops...</p>
+                <p className="text-sm font-medium">{t('portal.loadingShops')}</p>
               </div>
             ) : shops.length === 0 ? (
-              <div className="bg-white p-8 sm:p-12 rounded-3xl border border-chairly-border text-center max-w-md mx-auto space-y-3">
+              <div className="bg-white p-8 sm:p-12 rounded-3xl border border-chairly-border text-center max-w-md mx-auto space-y-4">
                 <Building2 className="w-12 h-12 text-chairly-muted mx-auto" />
-                <h3 className="text-base font-bold text-chairly-dark">No Barbershops Available</h3>
-                <p className="text-xs sm:text-sm text-chairly-muted">
-                  There are currently no active barbershops listed. Please check back shortly or switch to the Owner account to register one!
+                <h3 className="text-base font-bold text-chairly-dark">{t('portal.noShopsTitle')}</h3>
+                <p className="text-xs sm:text-sm text-chairly-muted leading-relaxed">
+                  {t('portal.noShopsDesc')}
                 </p>
+                <div className="pt-2">
+                  <a
+                    href="/apply"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-chairly-terracotta-500 hover:bg-chairly-terracotta-600 text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors"
+                  >
+                    <Scissors className="w-4 h-4" />
+                    {t('auth.applyButton')}
+                  </a>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">

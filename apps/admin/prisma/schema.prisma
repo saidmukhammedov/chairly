@@ -31,25 +31,33 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           String       @id @default(uuid())
-  email        String       @unique
+  email        String?      @unique
   passwordHash String
   firstName    String
   lastName     String
-  phone        String?
+  phone        String?      @unique
   avatarUrl    String?
   role         UserRole     @default(CUSTOMER)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  memberships  ShopMember[]
-  appointments Appointment[] @relation("CustomerAppointments")
-  favorites    Favorite[]
+  memberships   ShopMember[]
+  appointments  Appointment[] @relation("CustomerAppointments")
+  favorites     Favorite[]
   barberProfile BarberProfile?
-  auditLogs    AppointmentStatusHistory[]
+  auditLogs     AppointmentStatusHistory[]
+  notifications Notification[]
 
   @@index([email])
+  @@index([phone])
 }
 
 model Shop {
@@ -269,4 +277,47 @@ model Favorite {
 
   @@unique([userId, shopId])
   @@index([userId])
+}
+
+model ShopApplication {
+  id              String            @id @default(uuid())
+  shopName        String
+  applicantName   String
+  applicantPhone  String
+  city            String
+  address         String
+  shopPhone       String
+  description     String
+  logoUrl         String?
+  coverImageUrl   String?
+  status          ApplicationStatus @default(PENDING)
+  rejectionReason String?
+  approvedShopId  String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  notifications   Notification[]
+
+  @@index([status])
+  @@index([applicantPhone])
+  @@index([createdAt])
+}
+
+model Notification {
+  id            String           @id @default(uuid())
+  userId        String?
+  phone         String?
+  applicationId String?
+  title         String
+  message       String
+  type          String           @default("INFO")
+  isRead        Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+
+  user          User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application   ShopApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([phone])
+  @@index([isRead])
 }

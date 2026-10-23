@@ -1,16 +1,75 @@
 import { z } from 'zod';
 import { APPOINTMENT_STATUSES } from '../constants';
-// Authentication
+import { isValidPhone } from '../utils/phone';
+// Customer Registration (Full Name, Phone, Password)
 export const RegisterSchema = z.object({
-    email: z.string().email('Please enter a valid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters long'),
-    firstName: z.string().min(1, 'First name is required').max(50),
-    lastName: z.string().min(1, 'Last name is required').max(50),
-    phone: z.string().optional().nullable(),
+    fullName: z
+        .string()
+        .min(2, "Ism va familiyangizni kiriting")
+        .max(100, "Ism va familiya juda uzun"),
+    phone: z
+        .string()
+        .min(7, "Telefon raqamini kiriting")
+        .refine((val) => isValidPhone(val), {
+        message: "Telefon raqami noto'g'ri formatda (masalan: +998 90 123 45 67)",
+    }),
+    password: z
+        .string()
+        .min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
+    // Optional legacy fields for backward compatibility
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    email: z.string().email().optional().nullable(),
 });
+// Universal Login Schema (Phone number or Email + Password)
 export const LoginSchema = z.object({
-    email: z.string().email('Please enter a valid email address'),
-    password: z.string().min(1, 'Password is required'),
+    identifier: z.string().optional(),
+    email: z.string().optional(),
+    phone: z.string().optional(),
+    password: z.string().min(1, "Parolni kiriting"),
+}).refine((data) => data.identifier || data.phone || data.email, {
+    message: "Telefon raqami kiritilishi shart",
+    path: ["phone"],
+});
+// Barbershop Application ("Add your barbershop to Chairly")
+export const ShopApplicationSchema = z.object({
+    shopName: z
+        .string()
+        .min(2, "Sartaroshxona nomini kiriting (kamida 2 ta belgi)")
+        .max(100),
+    applicantName: z
+        .string()
+        .min(2, "Ariza beruvchining ism-familiyasini kiriting")
+        .max(100),
+    applicantPhone: z
+        .string()
+        .min(7, "Aloqa telefon raqamingizni kiriting")
+        .refine((val) => isValidPhone(val), {
+        message: "Telefon raqami noto'g'ri formatda",
+    }),
+    city: z
+        .string()
+        .min(2, "Shaharni kiriting")
+        .max(100),
+    address: z
+        .string()
+        .min(3, "To'liq manzilni kiriting")
+        .max(200),
+    shopPhone: z
+        .string()
+        .min(7, "Sartaroshxonaning ishchi raqamini kiriting")
+        .refine((val) => isValidPhone(val), {
+        message: "Sartaroshxona telefon raqami noto'g'ri formatda",
+    }),
+    description: z
+        .string()
+        .min(10, "Sartaroshxona haqida qisqacha ma'lumot kiriting (kamida 10 ta belgi)")
+        .max(1000),
+    logoUrl: z.string().url().optional().nullable().or(z.literal('')),
+    coverImageUrl: z.string().url().optional().nullable().or(z.literal('')),
+});
+export const RejectApplicationSchema = z.object({
+    reason: z.string().max(500).optional().nullable(),
 });
 // Booking Creation
 export const CreateBookingSchema = z.object({

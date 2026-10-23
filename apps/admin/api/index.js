@@ -220,16 +220,75 @@ var ACTIVE_APPOINTMENT_STATUSES = [
 
 // ../../packages/shared/src/schemas/index.ts
 import { z } from "zod";
+
+// ../../packages/shared/src/utils/phone.ts
+function normalizePhone(rawPhone) {
+  if (!rawPhone) return "";
+  const cleaned = rawPhone.replace(/[\s\-\(\)\.]/g, "");
+  if (!cleaned.startsWith("+")) {
+    if (cleaned.startsWith("998")) {
+      return "+" + cleaned;
+    } else if (cleaned.length === 9) {
+      return "+998" + cleaned;
+    }
+    return "+" + cleaned;
+  }
+  return cleaned;
+}
+function isValidPhone(phone) {
+  if (!phone) return false;
+  const normalized = normalizePhone(phone);
+  return /^\+998\d{9}$/.test(normalized) || /^\+\d{10,15}$/.test(normalized);
+}
+function parseFullName(fullName) {
+  const trimmed = (fullName || "").trim().replace(/\s+/g, " ");
+  if (!trimmed) {
+    return { firstName: "Mijoz", lastName: "" };
+  }
+  const parts = trimmed.split(" ");
+  const firstName = parts[0];
+  const lastName = parts.slice(1).join(" ");
+  return { firstName, lastName };
+}
+
+// ../../packages/shared/src/schemas/index.ts
 var RegisterSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
-  firstName: z.string().min(1, "First name is required").max(50),
-  lastName: z.string().min(1, "Last name is required").max(50),
-  phone: z.string().optional().nullable()
+  fullName: z.string().min(2, "Ism va familiyangizni kiriting").max(100, "Ism va familiya juda uzun"),
+  phone: z.string().min(7, "Telefon raqamini kiriting").refine((val) => isValidPhone(val), {
+    message: "Telefon raqami noto'g'ri formatda (masalan: +998 90 123 45 67)"
+  }),
+  password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
+  // Optional legacy fields for backward compatibility
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional().nullable()
 });
 var LoginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required")
+  identifier: z.string().optional(),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  password: z.string().min(1, "Parolni kiriting")
+}).refine((data) => data.identifier || data.phone || data.email, {
+  message: "Telefon raqami kiritilishi shart",
+  path: ["phone"]
+});
+var ShopApplicationSchema = z.object({
+  shopName: z.string().min(2, "Sartaroshxona nomini kiriting (kamida 2 ta belgi)").max(100),
+  applicantName: z.string().min(2, "Ariza beruvchining ism-familiyasini kiriting").max(100),
+  applicantPhone: z.string().min(7, "Aloqa telefon raqamingizni kiriting").refine((val) => isValidPhone(val), {
+    message: "Telefon raqami noto'g'ri formatda"
+  }),
+  city: z.string().min(2, "Shaharni kiriting").max(100),
+  address: z.string().min(3, "To'liq manzilni kiriting").max(200),
+  shopPhone: z.string().min(7, "Sartaroshxonaning ishchi raqamini kiriting").refine((val) => isValidPhone(val), {
+    message: "Sartaroshxona telefon raqami noto'g'ri formatda"
+  }),
+  description: z.string().min(10, "Sartaroshxona haqida qisqacha ma'lumot kiriting (kamida 10 ta belgi)").max(1e3),
+  logoUrl: z.string().url().optional().nullable().or(z.literal("")),
+  coverImageUrl: z.string().url().optional().nullable().or(z.literal(""))
+});
+var RejectApplicationSchema = z.object({
+  reason: z.string().max(500).optional().nullable()
 });
 var CreateBookingSchema = z.object({
   shopId: z.string().uuid("Invalid shop ID"),
@@ -295,36 +354,90 @@ var ShopSettingsSchema = z.object({
 // src/server/routes/auth.ts
 import { UserRole } from "@prisma/client";
 var router = Router();
+var loginRateLimit = /* @__PURE__ */ new Map();
+var MAX_LOGIN_ATTEMPTS = 5;
+var LOCKOUT_DURATION_MS = 15 * 60 * 1e3;
+function checkRateLimit(key) {
+  const now = Date.now();
+  const record = loginRateLimit.get(key);
+  if (!record) return;
+  if (record.lockedUntil && record.lockedUntil > now) {
+    const minutesRemaining = Math.ceil((record.lockedUntil - now) / 6e4);
+    throw new AppError(
+      `Juda ko'p muvaffaqiyatsiz urinishlar. Iltimos ${minutesRemaining} daqiqadan so'ng qayta urinib ko'ring.`,
+      429
+    );
+  }
+  if (record.lockedUntil && record.lockedUntil <= now) {
+    loginRateLimit.delete(key);
+  }
+}
+function recordFailedLogin(key) {
+  const now = Date.now();
+  const record = loginRateLimit.get(key) || { attempts: 0 };
+  record.attempts += 1;
+  if (record.attempts >= MAX_LOGIN_ATTEMPTS) {
+    record.lockedUntil = now + LOCKOUT_DURATION_MS;
+  }
+  loginRateLimit.set(key, record);
+}
+function resetRateLimit(key) {
+  loginRateLimit.delete(key);
+}
 router.post("/register", validateBody(RegisterSchema), async (req, res, next) => {
   try {
-    const { email, password, firstName, lastName, phone } = req.body;
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      throw new AppError("An account with this email already exists", 400);
+    const { fullName, phone, password, firstName, lastName, email } = req.body;
+    const normalizedPhone = normalizePhone(phone);
+    if (!isValidPhone(normalizedPhone)) {
+      throw new AppError("Telefon raqami formati noto'g'ri (masalan: +998 90 123 45 67)", 400);
+    }
+    const existingPhone = await prisma.user.findUnique({
+      where: { phone: normalizedPhone }
+    });
+    if (existingPhone) {
+      throw new AppError("Ushbu telefon raqami bilan hisob allaqachon mavjud", 400);
+    }
+    let cleanEmail = void 0;
+    if (email && email.trim()) {
+      cleanEmail = email.trim().toLowerCase();
+      const existingEmail = await prisma.user.findUnique({
+        where: { email: cleanEmail }
+      });
+      if (existingEmail) {
+        throw new AppError("Ushbu email bilan hisob allaqachon mavjud", 400);
+      }
+    }
+    let parsedFirst = firstName?.trim();
+    let parsedLast = lastName?.trim();
+    if (!parsedFirst && fullName) {
+      const split = parseFullName(fullName);
+      parsedFirst = split.firstName;
+      parsedLast = split.lastName;
     }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {
-        email,
+        phone: normalizedPhone,
+        email: cleanEmail || null,
         passwordHash,
-        firstName,
-        lastName,
-        phone,
+        firstName: parsedFirst || "Mijoz",
+        lastName: parsedLast || "",
         role: UserRole.CUSTOMER
+        // Public registration is ALWAYS customer
       },
       select: {
         id: true,
+        phone: true,
         email: true,
         firstName: true,
         lastName: true,
-        phone: true,
         role: true,
         avatarUrl: true,
         createdAt: true
       }
     });
     const accessToken = jwt2.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { userId: user.id, email: user.email || "", phone: user.phone, role: user.role },
       config.jwtSecret,
       { expiresIn: "7d" }
     );
@@ -339,26 +452,51 @@ router.post("/register", validateBody(RegisterSchema), async (req, res, next) =>
 });
 router.post("/login", validateBody(LoginSchema), async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        memberships: {
-          include: {
-            shop: { select: { id: true, name: true, slug: true } }
+    const { identifier, phone, email, password } = req.body;
+    const rawIdentifier = (identifier || phone || email || "").trim();
+    if (!rawIdentifier) {
+      throw new AppError("Telefon raqami yoki parolni kiriting", 400);
+    }
+    const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+    const rateLimitKey = `${clientIp}_${rawIdentifier.toLowerCase()}`;
+    checkRateLimit(rateLimitKey);
+    let user = null;
+    if (rawIdentifier.includes("@")) {
+      user = await prisma.user.findUnique({
+        where: { email: rawIdentifier.toLowerCase() },
+        include: {
+          memberships: {
+            include: {
+              shop: { select: { id: true, name: true, slug: true } }
+            }
           }
         }
-      }
-    });
+      });
+    } else {
+      const normalizedPhone = normalizePhone(rawIdentifier);
+      user = await prisma.user.findUnique({
+        where: { phone: normalizedPhone },
+        include: {
+          memberships: {
+            include: {
+              shop: { select: { id: true, name: true, slug: true } }
+            }
+          }
+        }
+      });
+    }
     if (!user) {
-      throw new AppError("Invalid email or password", 401);
+      recordFailedLogin(rateLimitKey);
+      throw new AppError("Telefon raqami yoki parol noto'g'ri", 401);
     }
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
-      throw new AppError("Invalid email or password", 401);
+      recordFailedLogin(rateLimitKey);
+      throw new AppError("Telefon raqami yoki parol noto'g'ri", 401);
     }
+    resetRateLimit(rateLimitKey);
     const accessToken = jwt2.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { userId: user.id, email: user.email || "", phone: user.phone, role: user.role },
       config.jwtSecret,
       { expiresIn: "7d" }
     );
@@ -367,7 +505,7 @@ router.post("/login", validateBody(LoginSchema), async (req, res, next) => {
       shopName: m.shop.name,
       role: m.role
     }));
-    if (user.email === "admin@chairly.app") {
+    if (user.email === "admin@chairly.app" || user.role === "OWNER" && user.email === "admin@chairly.app") {
       const allShops = await prisma.shop.findMany({
         where: { isActive: true },
         select: { id: true, name: true },
@@ -387,10 +525,10 @@ router.post("/login", validateBody(LoginSchema), async (req, res, next) => {
     res.json({
       user: {
         id: user.id,
+        phone: user.phone,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        phone: user.phone,
         role: user.role,
         avatarUrl: user.avatarUrl,
         createdAt: user.createdAt
@@ -442,10 +580,10 @@ router.get("/me", authenticate, async (req, res, next) => {
     res.json({
       user: {
         id: user.id,
+        phone: user.phone,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        phone: user.phone,
         role: user.role,
         avatarUrl: user.avatarUrl,
         createdAt: user.createdAt
@@ -458,27 +596,44 @@ router.get("/me", authenticate, async (req, res, next) => {
 });
 router.put("/profile", authenticate, async (req, res, next) => {
   try {
-    const { firstName, lastName, phone, avatarUrl } = req.body;
-    if (firstName !== void 0 && (typeof firstName !== "string" || firstName.trim().length === 0)) {
-      throw new AppError("First name cannot be empty", 400);
+    const { firstName, lastName, fullName, phone, avatarUrl } = req.body;
+    let updatedFirst = firstName;
+    let updatedLast = lastName;
+    if (fullName && typeof fullName === "string") {
+      const split = parseFullName(fullName);
+      updatedFirst = split.firstName;
+      updatedLast = split.lastName;
     }
-    if (lastName !== void 0 && (typeof lastName !== "string" || lastName.trim().length === 0)) {
-      throw new AppError("Last name cannot be empty", 400);
+    let normalizedPhone = void 0;
+    if (phone !== void 0 && phone !== null && phone.trim().length > 0) {
+      normalizedPhone = normalizePhone(phone);
+      if (!isValidPhone(normalizedPhone)) {
+        throw new AppError("Telefon raqami formati noto'g'ri", 400);
+      }
+      const existing = await prisma.user.findFirst({
+        where: {
+          phone: normalizedPhone,
+          id: { not: req.user.userId }
+        }
+      });
+      if (existing) {
+        throw new AppError("Ushbu telefon raqami boshqa hisobga biriktirilgan", 400);
+      }
     }
     const updated = await prisma.user.update({
       where: { id: req.user.userId },
       data: {
-        ...firstName ? { firstName: firstName.trim() } : {},
-        ...lastName ? { lastName: lastName.trim() } : {},
-        ...phone !== void 0 ? { phone: phone?.trim() || null } : {},
+        ...updatedFirst ? { firstName: updatedFirst.trim() } : {},
+        ...updatedLast !== void 0 ? { lastName: updatedLast.trim() } : {},
+        ...normalizedPhone !== void 0 ? { phone: normalizedPhone } : {},
         ...avatarUrl !== void 0 ? { avatarUrl: avatarUrl?.trim() || null } : {}
       },
       select: {
         id: true,
+        phone: true,
         email: true,
         firstName: true,
         lastName: true,
-        phone: true,
         role: true,
         avatarUrl: true,
         createdAt: true
@@ -493,10 +648,10 @@ router.put("/password", authenticate, async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {
-      throw new AppError("Both current password and new password are required", 400);
+      throw new AppError("Joriy parol va yangi parol kiritilishi shart", 400);
     }
     if (typeof newPassword !== "string" || newPassword.length < 6) {
-      throw new AppError("New password must be at least 6 characters long", 400);
+      throw new AppError("Yangi parol kamida 6 ta belgidan iborat bo'lishi kerak", 400);
     }
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId }
@@ -506,14 +661,14 @@ router.put("/password", authenticate, async (req, res, next) => {
     }
     const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isMatch) {
-      throw new AppError("Current password is incorrect", 400);
+      throw new AppError("Joriy parol noto'g'ri", 400);
     }
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await prisma.user.update({
       where: { id: user.id },
       data: { passwordHash }
     });
-    res.json({ message: "Password changed successfully" });
+    res.json({ message: "Parol muvaffaqiyatli o'zgartirildi" });
   } catch (err) {
     next(err);
   }
@@ -668,7 +823,7 @@ router2.post("/", authenticate, requirePlatformOwner, async (req, res, next) => 
         const cleanEmail = adminEmail.trim().toLowerCase();
         let adminUser = await tx.user.findUnique({ where: { email: cleanEmail } });
         if (!adminUser) {
-          const pass = adminPassword || "chairly123";
+          const pass = adminPassword && adminPassword.trim() ? adminPassword.trim() : Math.random().toString(36).slice(-8) + "A1!";
           const passwordHash = await bcrypt2.hash(pass, 10);
           adminUser = await tx.user.create({
             data: {
@@ -780,7 +935,7 @@ router2.post("/:id/admins", authenticate, requirePlatformOwner, async (req, res,
     const cleanEmail = email.trim().toLowerCase();
     let user = await prisma.user.findUnique({ where: { email: cleanEmail } });
     if (!user) {
-      const pass = password || "chairly123";
+      const pass = password && password.trim() ? password.trim() : Math.random().toString(36).slice(-8) + "A1!";
       const passwordHash = await bcrypt2.hash(pass, 10);
       user = await prisma.user.create({
         data: {
@@ -2407,6 +2562,388 @@ router9.put(
 );
 var shopSettings_default = router9;
 
+// src/server/routes/applications.ts
+import { Router as Router10 } from "express";
+import bcrypt3 from "bcryptjs";
+import crypto from "crypto";
+var router10 = Router10();
+function generateSlug2(text) {
+  return text.toLowerCase().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
+}
+router10.post("/", validateBody(ShopApplicationSchema), async (req, res, next) => {
+  try {
+    const {
+      shopName,
+      applicantName,
+      applicantPhone,
+      city,
+      address,
+      shopPhone,
+      description,
+      logoUrl,
+      coverImageUrl
+    } = req.body;
+    const normApplicantPhone = normalizePhone(applicantPhone);
+    const normShopPhone = normalizePhone(shopPhone);
+    if (!isValidPhone(normApplicantPhone) || !isValidPhone(normShopPhone)) {
+      throw new AppError("Telefon raqamlari to'g'ri formatda kiritilishi lozim", 400);
+    }
+    const existingPending = await prisma.shopApplication.findFirst({
+      where: {
+        applicantPhone: normApplicantPhone,
+        status: "PENDING"
+      }
+    });
+    if (existingPending) {
+      throw new AppError(
+        "Sizning telefon raqamingiz bo'yicha ko'rib chiqilayotgan ariza allaqachon mavjud. Iltimos, natijani kuting.",
+        400
+      );
+    }
+    const application = await prisma.shopApplication.create({
+      data: {
+        shopName: shopName.trim(),
+        applicantName: applicantName.trim(),
+        applicantPhone: normApplicantPhone,
+        city: city.trim(),
+        address: address.trim(),
+        shopPhone: normShopPhone,
+        description: description.trim(),
+        logoUrl: logoUrl?.trim() || null,
+        coverImageUrl: coverImageUrl?.trim() || null,
+        status: "PENDING"
+      }
+    });
+    await prisma.notification.create({
+      data: {
+        phone: normApplicantPhone,
+        applicationId: application.id,
+        title: "Ariza qabul qilindi",
+        message: `"${shopName.trim()}" sartaroshxonasini Chairly platformasiga qo'shish bo'yicha arizangiz muvaffaqiyatli qabul qilindi. Moderatorlarimiz tez orada uni ko'rib chiqadilar.`,
+        type: "APPLICATION_SUBMITTED"
+      }
+    });
+    res.status(201).json({
+      success: true,
+      message: "Arizangiz muvaffaqiyatli yuborildi! Ko'rib chiqilgach, sizga xabar beriladi.",
+      application: {
+        id: application.id,
+        shopName: application.shopName,
+        status: application.status,
+        createdAt: application.createdAt
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+router10.get("/status", async (req, res, next) => {
+  try {
+    const { phone } = req.query;
+    if (!phone || typeof phone !== "string") {
+      throw new AppError("Telefon raqami talab qilinadi", 400);
+    }
+    const normPhone = normalizePhone(phone);
+    const applications = await prisma.shopApplication.findMany({
+      where: { applicantPhone: normPhone },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        shopName: true,
+        city: true,
+        status: true,
+        rejectionReason: true,
+        approvedShopId: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+    res.json(applications);
+  } catch (err) {
+    next(err);
+  }
+});
+router10.get("/", authenticate, requirePlatformOwner, async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    const whereClause = {};
+    if (status && status !== "ALL" && ["PENDING", "APPROVED", "REJECTED"].includes(status)) {
+      whereClause.status = status;
+    }
+    const applications = await prisma.shopApplication.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" }
+    });
+    const [pendingCount, approvedCount, rejectedCount] = await Promise.all([
+      prisma.shopApplication.count({ where: { status: "PENDING" } }),
+      prisma.shopApplication.count({ where: { status: "APPROVED" } }),
+      prisma.shopApplication.count({ where: { status: "REJECTED" } })
+    ]);
+    res.json({
+      applications,
+      counts: {
+        total: applications.length,
+        pending: pendingCount,
+        approved: approvedCount,
+        rejected: rejectedCount
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+router10.get("/:id", authenticate, requirePlatformOwner, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const application = await prisma.shopApplication.findUnique({
+      where: { id }
+    });
+    if (!application) {
+      throw new AppError("Ariza topilmadi", 404);
+    }
+    res.json(application);
+  } catch (err) {
+    next(err);
+  }
+});
+router10.post("/:id/approve", authenticate, requirePlatformOwner, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const application = await prisma.shopApplication.findUnique({
+      where: { id }
+    });
+    if (!application) {
+      throw new AppError("Ariza topilmadi", 404);
+    }
+    if (application.status !== "PENDING") {
+      throw new AppError(`Ushbu ariza allaqachon ko'rib chiqilgan (Status: ${application.status})`, 400);
+    }
+    const result = await prisma.$transaction(async (tx) => {
+      let baseSlug = generateSlug2(application.shopName);
+      let uniqueSlug = baseSlug;
+      let counter = 1;
+      while (await tx.shop.findUnique({ where: { slug: uniqueSlug } })) {
+        uniqueSlug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      const shop = await tx.shop.create({
+        data: {
+          name: application.shopName,
+          slug: uniqueSlug,
+          description: application.description,
+          phone: application.shopPhone,
+          address: application.address,
+          city: application.city,
+          logoUrl: application.logoUrl,
+          coverImageUrl: application.coverImageUrl,
+          currency: "UZS",
+          timezone: "Asia/Tashkent",
+          isActive: true,
+          leadTimeMinutes: 30,
+          horizonDays: 30,
+          cancelDeadlineHours: 2
+        }
+      });
+      for (let day = 0; day <= 6; day++) {
+        await tx.shopWorkingHour.create({
+          data: {
+            shopId: shop.id,
+            dayOfWeek: day,
+            openTime: "09:00",
+            closeTime: "21:00",
+            isClosed: false
+          }
+        });
+      }
+      let user = await tx.user.findUnique({
+        where: { phone: application.applicantPhone }
+      });
+      let generatedTempPassword = null;
+      if (!user) {
+        generatedTempPassword = `Chairly@${crypto.randomInt(1e5, 999999)}`;
+        const passwordHash = await bcrypt3.hash(generatedTempPassword, 10);
+        const { firstName, lastName } = parseFullName(application.applicantName);
+        user = await tx.user.create({
+          data: {
+            phone: application.applicantPhone,
+            passwordHash,
+            firstName,
+            lastName,
+            role: "MANAGER"
+          }
+        });
+      } else if (user.role === "CUSTOMER") {
+        user = await tx.user.update({
+          where: { id: user.id },
+          data: { role: "MANAGER" }
+        });
+      }
+      await tx.shopMember.create({
+        data: {
+          shopId: shop.id,
+          userId: user.id,
+          role: "OWNER"
+        }
+      });
+      const updatedApp = await tx.shopApplication.update({
+        where: { id: application.id },
+        data: {
+          status: "APPROVED",
+          approvedShopId: shop.id
+        }
+      });
+      const tempPassNote = generatedTempPassword ? ` Siz uchun do'kon boshqaruvchi hisobi yaratildi. Telefon: ${user.phone}, Vaqtinchalik parol: ${generatedTempPassword}` : ` O'z telefon raqamingiz orqali platformaga kirib, boshqaruv panelidan foydalanishingiz mumkin.`;
+      await tx.notification.create({
+        data: {
+          userId: user.id,
+          phone: application.applicantPhone,
+          applicationId: application.id,
+          title: "Arizangiz ma'qullandi! \u{1F389}",
+          message: `Tabriklaymiz! "${application.shopName}" sartaroshxonasi Chairly platformasiga muvaffaqiyatli qo'shildi.${tempPassNote}`,
+          type: "APPLICATION_APPROVED"
+        }
+      });
+      return {
+        application: updatedApp,
+        shop,
+        adminUser: {
+          id: user.id,
+          phone: user.phone,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          temporaryPassword: generatedTempPassword
+        }
+      };
+    });
+    res.json({
+      success: true,
+      message: "Ariza muvaffaqiyatli ma'qullandi va sartaroshxona yaratildi",
+      ...result
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+router10.post("/:id/reject", authenticate, requirePlatformOwner, validateBody(RejectApplicationSchema), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const application = await prisma.shopApplication.findUnique({
+      where: { id }
+    });
+    if (!application) {
+      throw new AppError("Ariza topilmadi", 404);
+    }
+    if (application.status !== "PENDING") {
+      throw new AppError(`Ushbu ariza allaqachon ko'rib chiqilgan (Status: ${application.status})`, 400);
+    }
+    const updated = await prisma.shopApplication.update({
+      where: { id },
+      data: {
+        status: "REJECTED",
+        rejectionReason: reason?.trim() || "Talablarga muvofiq kelmadi"
+      }
+    });
+    await prisma.notification.create({
+      data: {
+        phone: application.applicantPhone,
+        applicationId: application.id,
+        title: "Arizangiz rad etildi",
+        message: `"${application.shopName}" sartaroshxonasini qo'shish bo'yicha arizangiz rad etildi.${reason ? ` Sabab: ${reason}` : ""}`,
+        type: "APPLICATION_REJECTED"
+      }
+    });
+    res.json({
+      success: true,
+      message: "Ariza rad etildi",
+      application: updated
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+var applications_default = router10;
+
+// src/server/routes/notifications.ts
+import { Router as Router11 } from "express";
+var router11 = Router11();
+router11.get("/", optionalAuthenticate, async (req, res, next) => {
+  try {
+    let whereClause = {};
+    if (req.user) {
+      const orConditions = [{ userId: req.user.userId }];
+      if (req.user.phone) {
+        orConditions.push({ phone: req.user.phone });
+      }
+      whereClause = { OR: orConditions };
+    } else {
+      const { phone } = req.query;
+      if (!phone || typeof phone !== "string") {
+        return res.json({ notifications: [], unreadCount: 0 });
+      }
+      const norm = normalizePhone(phone);
+      whereClause = { phone: norm };
+    }
+    const notifications = await prisma.notification.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
+      take: 50
+    });
+    const unreadCount = await prisma.notification.count({
+      where: {
+        ...whereClause,
+        isRead: false
+      }
+    });
+    res.json({
+      notifications,
+      unreadCount
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+router11.patch("/:id/read", authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const notif = await prisma.notification.findUnique({
+      where: { id }
+    });
+    if (!notif) {
+      throw new AppError("Xabarnoma topilmadi", 404);
+    }
+    if (notif.userId && notif.userId !== req.user.userId && notif.phone !== req.user.phone) {
+      throw new AppError("Ruxsat berilmadi", 403);
+    }
+    const updated = await prisma.notification.update({
+      where: { id },
+      data: { isRead: true }
+    });
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+router11.post("/read-all", authenticate, async (req, res, next) => {
+  try {
+    const orConditions = [{ userId: req.user.userId }];
+    if (req.user.phone) {
+      orConditions.push({ phone: req.user.phone });
+    }
+    await prisma.notification.updateMany({
+      where: {
+        OR: orConditions,
+        isRead: false
+      },
+      data: { isRead: true }
+    });
+    res.json({ success: true, message: "Barcha xabarnomalar o'qilgan deb belgilandi" });
+  } catch (err) {
+    next(err);
+  }
+});
+var notifications_default = router11;
+
 // src/server/app.ts
 var app = express();
 app.use(cors({ origin: "*" }));
@@ -2427,6 +2964,8 @@ app.use(["/api/appointments", "/appointments"], appointments_default);
 app.use(["/api/dashboard", "/dashboard"], dashboard_default);
 app.use(["/api/customers", "/customers"], customers_default);
 app.use(["/api/settings", "/settings"], shopSettings_default);
+app.use(["/api/applications", "/applications"], applications_default);
+app.use(["/api/notifications", "/notifications"], notifications_default);
 app.use(errorHandler);
 var app_default = app;
 

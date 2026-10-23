@@ -176,7 +176,7 @@ router.post('/', authenticate, requirePlatformOwner, async (req: Request, res: R
         let adminUser = await tx.user.findUnique({ where: { email: cleanEmail } });
 
         if (!adminUser) {
-          const pass = adminPassword || 'chairly123';
+          const pass = adminPassword && adminPassword.trim() ? adminPassword.trim() : Math.random().toString(36).slice(-8) + 'A1!';
           const passwordHash = await bcrypt.hash(pass, 10);
           adminUser = await tx.user.create({
             data: {
@@ -308,7 +308,7 @@ router.post('/:id/admins', authenticate, requirePlatformOwner, async (req: Reque
     let user = await prisma.user.findUnique({ where: { email: cleanEmail } });
 
     if (!user) {
-      const pass = password || 'chairly123';
+      const pass = password && password.trim() ? password.trim() : Math.random().toString(36).slice(-8) + 'A1!';
       const passwordHash = await bcrypt.hash(pass, 10);
       user = await prisma.user.create({
         data: {

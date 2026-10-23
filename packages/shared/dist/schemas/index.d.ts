@@ -1,35 +1,94 @@
 import { z } from 'zod';
 export declare const RegisterSchema: z.ZodObject<{
-    email: z.ZodString;
+    fullName: z.ZodString;
+    phone: z.ZodEffects<z.ZodString, string, string>;
     password: z.ZodString;
-    firstName: z.ZodString;
-    lastName: z.ZodString;
-    phone: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    firstName: z.ZodOptional<z.ZodString>;
+    lastName: z.ZodOptional<z.ZodString>;
+    email: z.ZodNullable<z.ZodOptional<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    email: string;
+    fullName: string;
+    phone: string;
     password: string;
-    firstName: string;
-    lastName: string;
-    phone?: string | null | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    email?: string | null | undefined;
 }, {
-    email: string;
+    fullName: string;
+    phone: string;
     password: string;
-    firstName: string;
-    lastName: string;
-    phone?: string | null | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    email?: string | null | undefined;
 }>;
 export type RegisterInput = z.infer<typeof RegisterSchema>;
-export declare const LoginSchema: z.ZodObject<{
-    email: z.ZodString;
+export declare const LoginSchema: z.ZodEffects<z.ZodObject<{
+    identifier: z.ZodOptional<z.ZodString>;
+    email: z.ZodOptional<z.ZodString>;
+    phone: z.ZodOptional<z.ZodString>;
     password: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    email: string;
     password: string;
+    phone?: string | undefined;
+    email?: string | undefined;
+    identifier?: string | undefined;
 }, {
-    email: string;
     password: string;
+    phone?: string | undefined;
+    email?: string | undefined;
+    identifier?: string | undefined;
+}>, {
+    password: string;
+    phone?: string | undefined;
+    email?: string | undefined;
+    identifier?: string | undefined;
+}, {
+    password: string;
+    phone?: string | undefined;
+    email?: string | undefined;
+    identifier?: string | undefined;
 }>;
 export type LoginInput = z.infer<typeof LoginSchema>;
+export declare const ShopApplicationSchema: z.ZodObject<{
+    shopName: z.ZodString;
+    applicantName: z.ZodString;
+    applicantPhone: z.ZodEffects<z.ZodString, string, string>;
+    city: z.ZodString;
+    address: z.ZodString;
+    shopPhone: z.ZodEffects<z.ZodString, string, string>;
+    description: z.ZodString;
+    logoUrl: z.ZodUnion<[z.ZodNullable<z.ZodOptional<z.ZodString>>, z.ZodLiteral<"">]>;
+    coverImageUrl: z.ZodUnion<[z.ZodNullable<z.ZodOptional<z.ZodString>>, z.ZodLiteral<"">]>;
+}, "strip", z.ZodTypeAny, {
+    shopName: string;
+    applicantName: string;
+    applicantPhone: string;
+    city: string;
+    address: string;
+    shopPhone: string;
+    description: string;
+    logoUrl?: string | null | undefined;
+    coverImageUrl?: string | null | undefined;
+}, {
+    shopName: string;
+    applicantName: string;
+    applicantPhone: string;
+    city: string;
+    address: string;
+    shopPhone: string;
+    description: string;
+    logoUrl?: string | null | undefined;
+    coverImageUrl?: string | null | undefined;
+}>;
+export type ShopApplicationInput = z.infer<typeof ShopApplicationSchema>;
+export declare const RejectApplicationSchema: z.ZodObject<{
+    reason: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    reason?: string | null | undefined;
+}, {
+    reason?: string | null | undefined;
+}>;
+export type RejectApplicationInput = z.infer<typeof RejectApplicationSchema>;
 export declare const CreateBookingSchema: z.ZodObject<{
     shopId: z.ZodString;
     serviceId: z.ZodString;
@@ -94,14 +153,14 @@ export declare const GetAvailabilityQuerySchema: z.ZodObject<{
     barberId: z.ZodOptional<z.ZodString>;
     date: z.ZodString;
 }, "strip", z.ZodTypeAny, {
+    date: string;
     shopId: string;
     serviceId: string;
-    date: string;
     barberId?: string | undefined;
 }, {
+    date: string;
     shopId: string;
     serviceId: string;
-    date: string;
     barberId?: string | undefined;
 }>;
 export type GetAvailabilityQuery = z.infer<typeof GetAvailabilityQuerySchema>;
@@ -173,11 +232,11 @@ export declare const ShopSettingsSchema: z.ZodObject<{
     isActive: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     phone: string;
-    name: string;
-    description: string;
-    isActive: boolean;
-    address: string;
     city: string;
+    address: string;
+    description: string;
+    name: string;
+    isActive: boolean;
     timezone: string;
     currency: string;
     leadTimeMinutes: number;
@@ -187,13 +246,13 @@ export declare const ShopSettingsSchema: z.ZodObject<{
     coverImageUrl?: string | null | undefined;
 }, {
     phone: string;
-    name: string;
-    description: string;
-    address: string;
     city: string;
-    isActive?: boolean | undefined;
+    address: string;
+    description: string;
+    name: string;
     logoUrl?: string | null | undefined;
     coverImageUrl?: string | null | undefined;
+    isActive?: boolean | undefined;
     timezone?: string | undefined;
     currency?: string | undefined;
     leadTimeMinutes?: number | undefined;

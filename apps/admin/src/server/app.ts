@@ -12,6 +12,8 @@ import appointmentsRoutes from './routes/appointments';
 import dashboardRoutes from './routes/dashboard';
 import customersRoutes from './routes/customers';
 import shopSettingsRoutes from './routes/shopSettings';
+import applicationsRoutes from './routes/applications';
+import notificationsRoutes from './routes/notifications';
 
 export const app = express();
 
@@ -38,6 +40,8 @@ app.use(['/api/appointments', '/appointments'], appointmentsRoutes);
 app.use(['/api/dashboard', '/dashboard'], dashboardRoutes);
 app.use(['/api/customers', '/customers'], customersRoutes);
 app.use(['/api/settings', '/settings'], shopSettingsRoutes);
+app.use(['/api/applications', '/applications'], applicationsRoutes);
+app.use(['/api/notifications', '/notifications'], notificationsRoutes);
 
 // Centralized error handling
 app.use(errorHandler);

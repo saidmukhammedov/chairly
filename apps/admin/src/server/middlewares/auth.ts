@@ -7,7 +7,8 @@ import { ShopMemberRole, UserRole } from '@chairly/shared';
 
 export interface AuthUserPayload {
   userId: string;
-  email: string;
+  email?: string | null;
+  phone?: string | null;
   role: UserRole;
 }
 

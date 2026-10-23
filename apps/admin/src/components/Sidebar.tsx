@@ -11,31 +11,25 @@ import {
   Building2,
   ChevronDown,
   User,
-  Shield,
+  FileText,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n';
+import { formatPhone } from '@chairly/shared';
 
 export const Sidebar: React.FC = () => {
-  const { user, memberships, currentShopId, currentMembership, switchShop, logout, login } = useAuth();
-  const isPlatformOwner = user?.email === 'admin@chairly.app' || user?.role === 'OWNER';
-
-  const handleQuickSwitch = async (email: string) => {
-    try {
-      await login(email, 'chairly123');
-      window.location.reload();
-    } catch (err: any) {
-      alert('Quick switch failed: ' + err.message);
-    }
-  };
+  const { user, memberships, currentShopId, currentMembership, switchShop, logout } = useAuth();
+  const { t } = useTranslation();
+  const isPlatformOwner = user?.email === 'admin@chairly.app' || (user?.role === 'OWNER' && user?.email === 'admin@chairly.app');
 
   const navItems = [
-    { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { label: 'Appointments', path: '/appointments', icon: Calendar },
-    { label: 'Services', path: '/services', icon: Scissors },
-    { label: 'Staff & Barbers', path: '/staff', icon: UserCheck },
-    { label: 'Customers', path: '/customers', icon: Users },
-    { label: 'Shop Settings', path: '/settings', icon: Settings },
-    { label: 'My Profile', path: '/profile', icon: User },
+    { label: t('nav.dashboard'), path: '/', icon: LayoutDashboard },
+    { label: t('nav.appointments'), path: '/appointments', icon: Calendar },
+    { label: t('nav.services'), path: '/services', icon: Scissors },
+    { label: t('nav.staff'), path: '/staff', icon: UserCheck },
+    { label: t('nav.customers'), path: '/customers', icon: Users },
+    { label: t('nav.settings'), path: '/settings', icon: Settings },
+    { label: t('nav.profile'), path: '/profile', icon: User },
   ];
 
   return (
@@ -49,9 +43,9 @@ export const Sidebar: React.FC = () => {
           <h1 className="text-xl font-bold tracking-tight text-chairly-dark leading-tight">
             Chairly
           </h1>
-          {user?.role === 'OWNER' ? (
-            <span className="text-[10px] font-bold tracking-wide uppercase text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-              👑 Website Owner
+          {isPlatformOwner ? (
+            <span className="text-[10px] font-bold tracking-wide uppercase text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+              👑 {t('common.status') === 'Holat' ? 'Platforma Egasi' : 'Platform Owner'}
             </span>
           ) : (
             <span className="text-[10px] font-medium tracking-wide uppercase text-chairly-terracotta-600 bg-chairly-terracotta-50 px-1.5 py-0.5 rounded">
@@ -64,26 +58,31 @@ export const Sidebar: React.FC = () => {
       {/* Shop Switcher */}
       <div className="p-4 border-b border-chairly-border bg-chairly-bg/60">
         <label className="text-[11px] uppercase tracking-wider text-chairly-muted font-semibold block mb-1.5">
-          Active Barbershop
+          {t('nav.barbershops')}
         </label>
         <div className="relative">
           <select
             value={currentShopId || ''}
             onChange={(e) => switchShop(e.target.value)}
-            className="w-full appearance-none bg-white border border-chairly-border rounded-lg pl-8 pr-8 py-2 text-sm font-medium text-chairly-dark focus:outline-none focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 cursor-pointer shadow-2xs"
+            disabled={memberships.length === 0}
+            className="w-full appearance-none bg-white border border-chairly-border rounded-lg pl-8 pr-8 py-2 text-sm font-medium text-chairly-dark focus:outline-none focus:ring-2 focus:ring-chairly-terracotta-500/20 focus:border-chairly-terracotta-500 cursor-pointer shadow-2xs disabled:opacity-60"
           >
-            {memberships.map((m) => (
-              <option key={m.shopId} value={m.shopId}>
-                {m.shopName}
-              </option>
-            ))}
+            {memberships.length === 0 ? (
+              <option value="">{t('common.noData')}</option>
+            ) : (
+              memberships.map((m) => (
+                <option key={m.shopId} value={m.shopId}>
+                  {m.shopName}
+                </option>
+              ))
+            )}
           </select>
           <Building2 className="w-4 h-4 text-chairly-muted absolute left-2.5 top-2.5 pointer-events-none" />
           <ChevronDown className="w-4 h-4 text-chairly-muted absolute right-2.5 top-2.5 pointer-events-none" />
         </div>
         {currentMembership && (
           <div className="mt-1.5 text-xs text-chairly-muted flex items-center justify-between">
-            <span>Role:</span>
+            <span>Rol:</span>
             <span className="font-semibold text-chairly-dark">{currentMembership.role}</span>
           </div>
         )}
@@ -112,11 +111,11 @@ export const Sidebar: React.FC = () => {
           );
         })}
 
-        {/* Platform Owner Exclusive Menu Item */}
+        {/* Platform Owner Exclusive Menu Items */}
         {isPlatformOwner && (
-          <div className="pt-2 mt-2 border-t border-chairly-border">
+          <div className="pt-3 mt-3 border-t border-chairly-border space-y-1">
             <NavLink
-              to="/shops"
+              to="/applications"
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
                   isActive
@@ -125,45 +124,26 @@ export const Sidebar: React.FC = () => {
                 }`
               }
             >
-              <Building2 className="w-5 h-5 text-amber-700" />
-              Barbershop Network
+              <FileText className="w-5 h-5 text-amber-700" />
+              {t('nav.applications')}
+            </NavLink>
+
+            <NavLink
+              to="/shops"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  isActive
+                    ? 'bg-chairly-terracotta-100 text-chairly-terracotta-900 border border-chairly-terracotta-300'
+                    : 'bg-chairly-panel hover:bg-chairly-border text-chairly-dark border border-chairly-border'
+                }`
+              }
+            >
+              <Building2 className="w-5 h-5 text-chairly-terracotta-600" />
+              {t('nav.barbershopNetwork')}
             </NavLink>
           </div>
         )}
       </nav>
-
-      {/* Quick Switch Demo Accounts */}
-      <div className="p-3 border-t border-chairly-border bg-chairly-bg/30">
-        <span className="text-[10px] uppercase font-bold tracking-wider text-chairly-muted block mb-1.5 px-1">
-          Switch Demo Account
-        </span>
-        <div className="grid grid-cols-2 gap-1.5">
-          <button
-            type="button"
-            onClick={() => handleQuickSwitch('customer@chairly.app')}
-            className="px-2 py-1.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-chairly-border rounded-lg text-[11px] font-semibold text-center transition-all shadow-2xs"
-            title="Switch to Demo Customer Portal"
-          >
-            👤 Customer
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              handleQuickSwitch(
-                user?.email === 'admin@chairly.app' ? 'owner@chopchop.uz' : 'admin@chairly.app'
-              )
-            }
-            className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold text-center transition-all border shadow-2xs ${
-              user?.email === 'admin@chairly.app'
-                ? 'bg-white hover:bg-chairly-panel text-chairly-dark border-chairly-border'
-                : 'bg-white hover:bg-amber-50 text-amber-800 border-amber-200'
-            }`}
-            title="Switch between Shop Admin and Website Owner"
-          >
-            {user?.email === 'admin@chairly.app' ? '💈 Shop Admin' : '👑 Owner'}
-          </button>
-        </div>
-      </div>
 
       {/* Staff Profile & Logout */}
       <div className="p-4 border-t border-chairly-border bg-chairly-bg/40">
@@ -171,22 +151,30 @@ export const Sidebar: React.FC = () => {
           <NavLink
             to="/profile"
             className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity"
-            title="View & Edit My Profile"
+            title={t('nav.profile')}
           >
-            <div className="w-9 h-9 rounded-full bg-chairly-terracotta-100 text-chairly-terracotta-700 border border-chairly-terracotta-200 flex items-center justify-center font-bold text-xs shrink-0">
-              {user?.firstName?.[0]}
-              {user?.lastName?.[0]}
+            <div className="w-9 h-9 rounded-full bg-chairly-terracotta-100 text-chairly-terracotta-700 border border-chairly-terracotta-200 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <>
+                  {user?.firstName?.[0]}
+                  {user?.lastName?.[0]}
+                </>
+              )}
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-chairly-dark truncate">
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="text-[11px] text-chairly-muted truncate">{user?.email}</p>
+              <p className="text-[11px] text-chairly-muted truncate">
+                {user?.phone ? formatPhone(user.phone) : user?.email}
+              </p>
             </div>
           </NavLink>
           <button
             onClick={logout}
-            title="Log Out"
+            title={t('nav.logout')}
             className="p-1.5 rounded-lg text-chairly-muted hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1"
           >
             <LogOut className="w-4 h-4" />

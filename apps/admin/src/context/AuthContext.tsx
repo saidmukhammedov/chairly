@@ -8,7 +8,8 @@ interface AuthContextType {
   currentShopId: string | null;
   currentMembership: ShopMemberSummary | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
+  register: (fullName: string, phone: string, password: string) => Promise<void>;
   logout: () => void;
   switchShop: (shopId: string) => void;
   updateProfile: (data: { firstName?: string; lastName?: string; phone?: string; avatarUrl?: string }) => Promise<void>;
@@ -57,12 +58,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     const res = await api.post<{
       user: UserPublic;
       tokens: { accessToken: string };
       memberships: ShopMemberSummary[];
-    }>('/auth/login', { email, password });
+    }>('/auth/login', { identifier, phone: identifier, email: identifier, password });
 
     localStorage.setItem('chairly_admin_token', res.tokens.accessToken);
     setUser(res.user);
@@ -72,6 +73,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentShopId(res.memberships[0].shopId);
       localStorage.setItem('chairly_active_shop', res.memberships[0].shopId);
     }
+  };
+
+  const register = async (fullName: string, phone: string, password: string) => {
+    const res = await api.post<{
+      user: UserPublic;
+      tokens: { accessToken: string };
+      memberships: ShopMemberSummary[];
+    }>('/auth/register', { fullName, phone, password });
+
+    localStorage.setItem('chairly_admin_token', res.tokens.accessToken);
+    setUser(res.user);
+    setMemberships(res.memberships || []);
   };
 
   const logout = () => {
@@ -109,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentMembership,
         isLoading,
         login,
+        register,
         logout,
         switchShop,
         updateProfile,

@@ -1,8 +1,12 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './i18n/LanguageContext';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { ApplyBusiness } from './pages/ApplyBusiness';
+import { Applications } from './pages/Applications';
 import { Dashboard } from './pages/Dashboard';
 import { Appointments } from './pages/Appointments';
 import { Services } from './pages/Services';
@@ -15,23 +19,28 @@ import { ShopManagement } from './pages/ShopManagement';
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<DashboardLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="appointments" element={<Appointments />} />
-            <Route path="services" element={<Services />} />
-            <Route path="staff" element={<Staff />} />
-            <Route path="customers" element={<Customers />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="shops" element={<ShopManagement />} />
-            <Route path="shops-management" element={<ShopManagement />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/apply" element={<ApplyBusiness />} />
+            <Route path="/" element={<DashboardLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="appointments" element={<Appointments />} />
+              <Route path="services" element={<Services />} />
+              <Route path="staff" element={<Staff />} />
+              <Route path="customers" element={<Customers />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="shops" element={<ShopManagement />} />
+              <Route path="shops-management" element={<ShopManagement />} />
+              <Route path="applications" element={<Applications />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 };
