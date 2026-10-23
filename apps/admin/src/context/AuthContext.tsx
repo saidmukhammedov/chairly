@@ -11,6 +11,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   switchShop: (shopId: string) => void;
+  updateProfile: (data: { firstName?: string; lastName?: string; phone?: string; avatarUrl?: string }) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -85,6 +87,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('chairly_active_shop', shopId);
   };
 
+  const updateProfile = async (data: { firstName?: string; lastName?: string; phone?: string; avatarUrl?: string }) => {
+    const res = await api.put<{ user: UserPublic }>('/auth/profile', data);
+    if (res.user) {
+      setUser(res.user);
+    }
+  };
+
+  const refreshUser = async () => {
+    await initAuth();
+  };
+
   const currentMembership = memberships.find((m) => m.shopId === currentShopId) || null;
 
   return (
@@ -98,6 +111,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         switchShop,
+        updateProfile,
+        refreshUser,
       }}
     >
       {children}

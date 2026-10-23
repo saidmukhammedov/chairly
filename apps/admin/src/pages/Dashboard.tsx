@@ -218,50 +218,91 @@ export const Dashboard: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-chairly-bg/50 border-b border-chairly-border text-[11px] uppercase tracking-wider text-chairly-muted font-semibold">
-                <tr>
-                  <th className="px-6 py-3.5">Time</th>
-                  <th className="px-6 py-3.5">Ref</th>
-                  <th className="px-6 py-3.5">Customer</th>
-                  <th className="px-6 py-3.5">Service</th>
-                  <th className="px-6 py-3.5">Barber</th>
-                  <th className="px-6 py-3.5">Price</th>
-                  <th className="px-6 py-3.5">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-chairly-border">
-                {data.todaySchedule.map((appt) => (
-                  <tr key={appt.id} className="hover:bg-chairly-bg/40 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-chairly-dark whitespace-nowrap">
-                      {format(new Date(appt.startTime), 'HH:mm')} - {format(new Date(appt.endTime), 'HH:mm')}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs font-semibold text-chairly-terracotta-600">
-                      {appt.bookingReference}
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="font-medium text-chairly-dark">{appt.customerName}</p>
+          <div>
+            {/* Mobile Card List (< sm) */}
+            <div className="sm:hidden divide-y divide-chairly-border">
+              {data.todaySchedule.map((appt) => (
+                <div key={appt.id} className="p-4 space-y-2.5 hover:bg-chairly-bg/40 transition-colors">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-chairly-terracotta-600">
+                        {appt.bookingReference}
+                      </span>
+                      <span className="text-xs text-chairly-muted">•</span>
+                      <span className="text-xs font-semibold text-chairly-dark">
+                        {format(new Date(appt.startTime), 'HH:mm')} - {format(new Date(appt.endTime), 'HH:mm')}
+                      </span>
+                    </div>
+                    <StatusBadge status={appt.status} />
+                  </div>
+
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-chairly-dark text-sm truncate">{appt.customerName}</p>
                       {appt.customerPhone && (
-                        <p className="text-xs text-chairly-muted">{appt.customerPhone}</p>
+                        <p className="text-xs text-chairly-muted truncate">{appt.customerPhone}</p>
                       )}
-                    </td>
-                    <td className="px-6 py-4 font-medium text-chairly-dark">
-                      {appt.serviceName}
-                    </td>
-                    <td className="px-6 py-4 text-chairly-muted">
-                      {appt.barberName}
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-chairly-dark">
-                      {appt.servicePrice.toLocaleString()} {data.currency}
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={appt.status} />
-                    </td>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-chairly-dark text-sm">
+                        {appt.servicePrice.toLocaleString()} {data.currency}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-chairly-muted pt-1 border-t border-chairly-border/60">
+                    <span className="font-medium text-chairly-dark">{appt.serviceName}</span> with {appt.barberName}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table (>= sm) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-chairly-bg/50 border-b border-chairly-border text-[11px] uppercase tracking-wider text-chairly-muted font-semibold">
+                  <tr>
+                    <th className="px-6 py-3.5">Time</th>
+                    <th className="px-6 py-3.5">Ref</th>
+                    <th className="px-6 py-3.5">Customer</th>
+                    <th className="px-6 py-3.5">Service</th>
+                    <th className="px-6 py-3.5">Barber</th>
+                    <th className="px-6 py-3.5">Price</th>
+                    <th className="px-6 py-3.5">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-chairly-border">
+                  {data.todaySchedule.map((appt) => (
+                    <tr key={appt.id} className="hover:bg-chairly-bg/40 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-chairly-dark whitespace-nowrap">
+                        {format(new Date(appt.startTime), 'HH:mm')} - {format(new Date(appt.endTime), 'HH:mm')}
+                      </td>
+                      <td className="px-6 py-4 font-mono text-xs font-semibold text-chairly-terracotta-600">
+                        {appt.bookingReference}
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="font-medium text-chairly-dark">{appt.customerName}</p>
+                        {appt.customerPhone && (
+                          <p className="text-xs text-chairly-muted">{appt.customerPhone}</p>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-chairly-dark">
+                        {appt.serviceName}
+                      </td>
+                      <td className="px-6 py-4 text-chairly-muted">
+                        {appt.barberName}
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-chairly-dark">
+                        {appt.servicePrice.toLocaleString()} {data.currency}
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={appt.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -274,13 +315,13 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="divide-y divide-chairly-border">
           {data.recentAppointments.map((appt) => (
-            <div key={appt.id} className="p-4 sm:px-6 flex items-center justify-between hover:bg-chairly-bg/30 transition-colors">
-              <div className="flex items-center gap-4 min-w-0">
+            <div key={appt.id} className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-chairly-bg/30 transition-colors">
+              <div className="flex items-center gap-3.5 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-chairly-panel border border-chairly-border flex items-center justify-center font-bold text-xs text-chairly-dark shrink-0">
                   {appt.bookingReference}
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-semibold text-chairly-dark truncate">{appt.customerName}</p>
                     <StatusBadge status={appt.status} />
                   </div>
@@ -289,7 +330,7 @@ export const Dashboard: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="text-right shrink-0 ml-4">
+              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-chairly-border/40">
                 <p className="font-bold text-chairly-dark text-sm">
                   {appt.servicePrice.toLocaleString()} {data.currency}
                 </p>

@@ -149,6 +149,23 @@ var requireShopMember = (allowedRoles = ["OWNER", "MANAGER", "BARBER"]) => {
     }
   };
 };
+var requirePlatformOwner = async (req, _res, next) => {
+  try {
+    if (!req.user) {
+      throw new AppError("Authentication required", 401);
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { id: true, email: true, role: true }
+    });
+    if (!user || user.role !== "OWNER" || user.email !== "admin@chairly.app") {
+      throw new AppError("Platform Owner access required for this action", 403);
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
 
 // src/server/middlewares/validate.ts
 var validateBody = (schema) => {
@@ -441,13 +458,20 @@ router.get("/me", authenticate, async (req, res, next) => {
 });
 router.put("/profile", authenticate, async (req, res, next) => {
   try {
-    const { firstName, lastName, phone } = req.body;
+    const { firstName, lastName, phone, avatarUrl } = req.body;
+    if (firstName !== void 0 && (typeof firstName !== "string" || firstName.trim().length === 0)) {
+      throw new AppError("First name cannot be empty", 400);
+    }
+    if (lastName !== void 0 && (typeof lastName !== "string" || lastName.trim().length === 0)) {
+      throw new AppError("Last name cannot be empty", 400);
+    }
     const updated = await prisma.user.update({
       where: { id: req.user.userId },
       data: {
-        ...firstName ? { firstName } : {},
-        ...lastName ? { lastName } : {},
-        ...phone !== void 0 ? { phone } : {}
+        ...firstName ? { firstName: firstName.trim() } : {},
+        ...lastName ? { lastName: lastName.trim() } : {},
+        ...phone !== void 0 ? { phone: phone?.trim() || null } : {},
+        ...avatarUrl !== void 0 ? { avatarUrl: avatarUrl?.trim() || null } : {}
       },
       select: {
         id: true,
@@ -465,11 +489,344 @@ router.put("/profile", authenticate, async (req, res, next) => {
     next(err);
   }
 });
+router.put("/password", authenticate, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      throw new AppError("Both current password and new password are required", 400);
+    }
+    if (typeof newPassword !== "string" || newPassword.length < 6) {
+      throw new AppError("New password must be at least 6 characters long", 400);
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId }
+    });
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      throw new AppError("Current password is incorrect", 400);
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash }
+    });
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    next(err);
+  }
+});
 var auth_default = router;
 
 // src/server/routes/shops.ts
 import { Router as Router2 } from "express";
+import bcrypt2 from "bcryptjs";
 var router2 = Router2();
+function generateSlug(name) {
+  const base = name.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
+  return base || "shop-" + Math.random().toString(36).substring(2, 7);
+}
+router2.get("/manage/all", authenticate, requirePlatformOwner, async (_req, res, next) => {
+  try {
+    const shops = await prisma.shop.findMany({
+      include: {
+        _count: {
+          select: {
+            barbers: true,
+            services: true,
+            appointments: true,
+            members: true
+          }
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                role: true
+              }
+            }
+          }
+        },
+        services: {
+          select: { price: true },
+          orderBy: { price: "asc" },
+          take: 1
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    const formatted = shops.map((s) => ({
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      description: s.description,
+      phone: s.phone,
+      address: s.address,
+      city: s.city,
+      logoUrl: s.logoUrl,
+      coverImageUrl: s.coverImageUrl,
+      currency: s.currency,
+      timezone: s.timezone,
+      isActive: s.isActive,
+      leadTimeMinutes: s.leadTimeMinutes,
+      horizonDays: s.horizonDays,
+      cancelDeadlineHours: s.cancelDeadlineHours,
+      createdAt: s.createdAt,
+      startingPrice: s.services[0]?.price || 0,
+      counts: s._count,
+      admins: s.members.map((m) => ({
+        id: m.id,
+        role: m.role,
+        user: m.user
+      }))
+    }));
+    res.json(formatted);
+  } catch (err) {
+    next(err);
+  }
+});
+router2.post("/", authenticate, requirePlatformOwner, async (req, res, next) => {
+  try {
+    const {
+      name,
+      slug: customSlug,
+      description,
+      phone,
+      address,
+      city,
+      logoUrl,
+      coverImageUrl,
+      currency = "UZS",
+      timezone = "Asia/Tashkent",
+      isActive = true,
+      adminEmail,
+      adminPassword,
+      adminFirstName,
+      adminLastName,
+      adminPhone
+    } = req.body;
+    if (!name || !name.trim()) {
+      throw new AppError("Barbershop name is required", 400);
+    }
+    if (!address || !address.trim()) {
+      throw new AppError("Address is required", 400);
+    }
+    if (!city || !city.trim()) {
+      throw new AppError("City is required", 400);
+    }
+    if (!phone || !phone.trim()) {
+      throw new AppError("Phone number is required", 400);
+    }
+    let baseSlug = customSlug && customSlug.trim() ? generateSlug(customSlug) : generateSlug(name);
+    let uniqueSlug = baseSlug;
+    let counter = 1;
+    while (await prisma.shop.findUnique({ where: { slug: uniqueSlug } })) {
+      uniqueSlug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    const shop = await prisma.$transaction(async (tx) => {
+      const createdShop = await tx.shop.create({
+        data: {
+          name: name.trim(),
+          slug: uniqueSlug,
+          description: description?.trim() || "Premium barbershop in " + city.trim(),
+          phone: phone.trim(),
+          address: address.trim(),
+          city: city.trim(),
+          logoUrl: logoUrl?.trim() || null,
+          coverImageUrl: coverImageUrl?.trim() || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80",
+          currency,
+          timezone,
+          isActive: Boolean(isActive)
+        }
+      });
+      const defaultWorkingHours = [
+        { dayOfWeek: 0, openTime: "10:00", closeTime: "18:00", isClosed: false },
+        { dayOfWeek: 1, openTime: "09:00", closeTime: "21:00", isClosed: false },
+        { dayOfWeek: 2, openTime: "09:00", closeTime: "21:00", isClosed: false },
+        { dayOfWeek: 3, openTime: "09:00", closeTime: "21:00", isClosed: false },
+        { dayOfWeek: 4, openTime: "09:00", closeTime: "21:00", isClosed: false },
+        { dayOfWeek: 5, openTime: "09:00", closeTime: "21:00", isClosed: false },
+        { dayOfWeek: 6, openTime: "09:00", closeTime: "21:00", isClosed: false }
+      ];
+      for (const wh of defaultWorkingHours) {
+        await tx.shopWorkingHour.create({
+          data: {
+            shopId: createdShop.id,
+            ...wh
+          }
+        });
+      }
+      if (adminEmail && adminEmail.trim()) {
+        const cleanEmail = adminEmail.trim().toLowerCase();
+        let adminUser = await tx.user.findUnique({ where: { email: cleanEmail } });
+        if (!adminUser) {
+          const pass = adminPassword || "chairly123";
+          const passwordHash = await bcrypt2.hash(pass, 10);
+          adminUser = await tx.user.create({
+            data: {
+              email: cleanEmail,
+              passwordHash,
+              firstName: adminFirstName?.trim() || "Shop",
+              lastName: adminLastName?.trim() || "Admin",
+              phone: adminPhone?.trim() || null,
+              role: "MANAGER"
+            }
+          });
+        }
+        await tx.shopMember.create({
+          data: {
+            shopId: createdShop.id,
+            userId: adminUser.id,
+            role: "OWNER"
+          }
+        });
+      }
+      return createdShop;
+    });
+    res.status(201).json(shop);
+  } catch (err) {
+    next(err);
+  }
+});
+router2.put("/:id", authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const isPlatformOwner = req.user.email === "admin@chairly.app";
+    if (!isPlatformOwner) {
+      const membership = await prisma.shopMember.findUnique({
+        where: { shopId_userId: { shopId: id, userId } }
+      });
+      if (!membership || membership.role !== "OWNER") {
+        throw new AppError("Only the shop owner or platform administrator can edit this barbershop", 403);
+      }
+    }
+    const {
+      name,
+      description,
+      phone,
+      address,
+      city,
+      logoUrl,
+      coverImageUrl,
+      currency,
+      timezone,
+      isActive,
+      leadTimeMinutes,
+      horizonDays,
+      cancelDeadlineHours
+    } = req.body;
+    const updated = await prisma.shop.update({
+      where: { id },
+      data: {
+        ...name ? { name: name.trim() } : {},
+        ...description !== void 0 ? { description: description.trim() } : {},
+        ...phone ? { phone: phone.trim() } : {},
+        ...address ? { address: address.trim() } : {},
+        ...city ? { city: city.trim() } : {},
+        ...logoUrl !== void 0 ? { logoUrl: logoUrl?.trim() || null } : {},
+        ...coverImageUrl !== void 0 ? { coverImageUrl: coverImageUrl?.trim() || null } : {},
+        ...currency ? { currency } : {},
+        ...timezone ? { timezone } : {},
+        ...isActive !== void 0 ? { isActive: Boolean(isActive) } : {},
+        ...leadTimeMinutes !== void 0 ? { leadTimeMinutes: Number(leadTimeMinutes) } : {},
+        ...horizonDays !== void 0 ? { horizonDays: Number(horizonDays) } : {},
+        ...cancelDeadlineHours !== void 0 ? { cancelDeadlineHours: Number(cancelDeadlineHours) } : {}
+      }
+    });
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+router2.patch("/:id/status", authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    const isPlatformOwner = req.user.email === "admin@chairly.app";
+    if (!isPlatformOwner) {
+      const membership = await prisma.shopMember.findUnique({
+        where: { shopId_userId: { shopId: id, userId: req.user.userId } }
+      });
+      if (!membership || membership.role !== "OWNER") {
+        throw new AppError("Permission denied", 403);
+      }
+    }
+    const updated = await prisma.shop.update({
+      where: { id },
+      data: { isActive: Boolean(isActive) },
+      select: { id: true, name: true, isActive: true }
+    });
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+router2.post("/:id/admins", authenticate, requirePlatformOwner, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { email, firstName, lastName, phone, password, role = "OWNER" } = req.body;
+    if (!email || !email.trim()) {
+      throw new AppError("Email is required", 400);
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    let user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+    if (!user) {
+      const pass = password || "chairly123";
+      const passwordHash = await bcrypt2.hash(pass, 10);
+      user = await prisma.user.create({
+        data: {
+          email: cleanEmail,
+          passwordHash,
+          firstName: firstName?.trim() || "Shop",
+          lastName: lastName?.trim() || "Admin",
+          phone: phone?.trim() || null,
+          role: "MANAGER"
+        }
+      });
+    }
+    const membership = await prisma.shopMember.upsert({
+      where: {
+        shopId_userId: { shopId: id, userId: user.id }
+      },
+      update: { role },
+      create: {
+        shopId: id,
+        userId: user.id,
+        role
+      },
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true, phone: true }
+        }
+      }
+    });
+    res.json(membership);
+  } catch (err) {
+    next(err);
+  }
+});
+router2.delete("/:id/admins/:userId", authenticate, requirePlatformOwner, async (req, res, next) => {
+  try {
+    const { id, userId } = req.params;
+    await prisma.shopMember.delete({
+      where: {
+        shopId_userId: { shopId: id, userId }
+      }
+    });
+    res.json({ message: "Administrator removed from shop" });
+  } catch (err) {
+    next(err);
+  }
+});
 router2.get("/", optionalAuthenticate, async (req, res, next) => {
   try {
     const { search, category, city } = req.query;

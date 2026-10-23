@@ -373,7 +373,68 @@ export const Appointments: React.FC = () => {
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-chairly-border shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile Card List (< sm) */}
+          <div className="sm:hidden divide-y divide-chairly-border">
+            {appointments.map((appt) => (
+              <div
+                key={appt.id}
+                onClick={() => {
+                  setSelectedAppt(appt);
+                  setIsDetailsOpen(true);
+                }}
+                className="p-4 space-y-3 hover:bg-chairly-bg/40 cursor-pointer transition-colors active:bg-chairly-panel"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-chairly-terracotta-600">
+                      {appt.bookingReference}
+                    </span>
+                    <span className="text-xs text-chairly-muted">•</span>
+                    <span className="text-xs font-semibold text-chairly-dark">
+                      {format(new Date(appt.startTime), 'HH:mm')} - {format(new Date(appt.endTime), 'HH:mm')}
+                    </span>
+                  </div>
+                  <StatusBadge status={appt.status} />
+                </div>
+
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-bold text-chairly-dark text-sm truncate">{appt.customerName}</p>
+                    <p className="text-xs text-chairly-muted truncate mt-0.5">
+                      {appt.customerPhone || appt.customerEmail}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-chairly-dark text-sm">
+                      {appt.servicePrice.toLocaleString()} {appt.currency}
+                    </p>
+                    <p className="text-[11px] text-chairly-muted">
+                      {format(new Date(appt.startTime), 'MMM d, yyyy')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-chairly-border/60 text-xs">
+                  <div className="text-chairly-muted truncate">
+                    <span className="font-medium text-chairly-dark">{appt.serviceName}</span> ({appt.serviceDuration}m) with {appt.barberName}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedAppt(appt);
+                      setIsDetailsOpen(true);
+                    }}
+                    className="shrink-0 ml-2 px-3 py-1.5 bg-chairly-panel hover:bg-chairly-border text-chairly-dark font-semibold rounded-lg transition-colors border border-chairly-border text-xs min-h-[36px] flex items-center"
+                  >
+                    Manage
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table (>= sm) */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-chairly-bg/50 border-b border-chairly-border text-[11px] uppercase tracking-wider text-chairly-muted font-semibold">
                 <tr>

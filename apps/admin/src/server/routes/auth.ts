@@ -194,13 +194,22 @@ router.get('/me', authenticate, async (req: Request, res: Response, next) => {
 
 router.put('/profile', authenticate, async (req: Request, res: Response, next) => {
   try {
-    const { firstName, lastName, phone } = req.body;
+    const { firstName, lastName, phone, avatarUrl } = req.body;
+
+    if (firstName !== undefined && (typeof firstName !== 'string' || firstName.trim().length === 0)) {
+      throw new AppError('First name cannot be empty', 400);
+    }
+    if (lastName !== undefined && (typeof lastName !== 'string' || lastName.trim().length === 0)) {
+      throw new AppError('Last name cannot be empty', 400);
+    }
+
     const updated = await prisma.user.update({
       where: { id: req.user!.userId },
       data: {
-        ...(firstName ? { firstName } : {}),
-        ...(lastName ? { lastName } : {}),
-        ...(phone !== undefined ? { phone } : {}),
+        ...(firstName ? { firstName: firstName.trim() } : {}),
+        ...(lastName ? { lastName: lastName.trim() } : {}),
+        ...(phone !== undefined ? { phone: phone?.trim() || null } : {}),
+        ...(avatarUrl !== undefined ? { avatarUrl: avatarUrl?.trim() || null } : {}),
       },
       select: {
         id: true,
@@ -214,6 +223,43 @@ router.put('/profile', authenticate, async (req: Request, res: Response, next) =
       },
     });
     res.json({ user: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/password', authenticate, async (req: Request, res: Response, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      throw new AppError('Both current password and new password are required', 400);
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+      throw new AppError('New password must be at least 6 characters long', 400);
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.userId },
+    });
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      throw new AppError('Current password is incorrect', 400);
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+
+    res.json({ message: 'Password changed successfully' });
   } catch (err) {
     next(err);
   }

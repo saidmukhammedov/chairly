@@ -124,3 +124,33 @@ export const requireShopMember = (allowedRoles: ShopMemberRole[] = ['OWNER', 'MA
     }
   };
 };
+
+/**
+ * Enforce platform owner privileges (super-admin across all of Chairly)
+ */
+export const requirePlatformOwner = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { id: true, email: true, role: true },
+    });
+
+    // Check if user has platform owner role
+    if (!user || user.role !== 'OWNER' || user.email !== 'admin@chairly.app') {
+      throw new AppError('Platform Owner access required for this action', 403);
+    }
+
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+

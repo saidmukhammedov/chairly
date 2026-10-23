@@ -10,11 +10,14 @@ import {
   LogOut,
   Building2,
   ChevronDown,
+  User,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Sidebar: React.FC = () => {
   const { user, memberships, currentShopId, currentMembership, switchShop, logout, login } = useAuth();
+  const isPlatformOwner = user?.email === 'admin@chairly.app' || user?.role === 'OWNER';
 
   const handleQuickSwitch = async (email: string) => {
     try {
@@ -32,6 +35,7 @@ export const Sidebar: React.FC = () => {
     { label: 'Staff & Barbers', path: '/staff', icon: UserCheck },
     { label: 'Customers', path: '/customers', icon: Users },
     { label: 'Shop Settings', path: '/settings', icon: Settings },
+    { label: 'My Profile', path: '/profile', icon: User },
   ];
 
   return (
@@ -107,6 +111,25 @@ export const Sidebar: React.FC = () => {
             </NavLink>
           );
         })}
+
+        {/* Platform Owner Exclusive Menu Item */}
+        {isPlatformOwner && (
+          <div className="pt-2 mt-2 border-t border-chairly-border">
+            <NavLink
+              to="/shops"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  isActive
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                    : 'bg-amber-50/80 text-amber-800 border border-amber-200/80 hover:bg-amber-100'
+                }`
+              }
+            >
+              <Building2 className="w-5 h-5 text-amber-700" />
+              Barbershop Network
+            </NavLink>
+          </div>
+        )}
       </nav>
 
       {/* Quick Switch Demo Accounts */}
@@ -145,8 +168,12 @@ export const Sidebar: React.FC = () => {
       {/* Staff Profile & Logout */}
       <div className="p-4 border-t border-chairly-border bg-chairly-bg/40">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-full bg-chairly-panel border border-chairly-border flex items-center justify-center font-medium text-sm text-chairly-dark shrink-0">
+          <NavLink
+            to="/profile"
+            className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity"
+            title="View & Edit My Profile"
+          >
+            <div className="w-9 h-9 rounded-full bg-chairly-terracotta-100 text-chairly-terracotta-700 border border-chairly-terracotta-200 flex items-center justify-center font-bold text-xs shrink-0">
               {user?.firstName?.[0]}
               {user?.lastName?.[0]}
             </div>
@@ -154,13 +181,13 @@ export const Sidebar: React.FC = () => {
               <p className="text-sm font-semibold text-chairly-dark truncate">
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="text-xs text-chairly-muted truncate">{user?.email}</p>
+              <p className="text-[11px] text-chairly-muted truncate">{user?.email}</p>
             </div>
-          </div>
+          </NavLink>
           <button
             onClick={logout}
             title="Log Out"
-            className="p-1.5 rounded-lg text-chairly-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            className="p-1.5 rounded-lg text-chairly-muted hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1"
           >
             <LogOut className="w-4 h-4" />
           </button>

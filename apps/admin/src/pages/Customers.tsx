@@ -86,7 +86,55 @@ export const Customers: React.FC = () => {
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-chairly-border shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile Card List (< sm) */}
+          <div className="sm:hidden divide-y divide-chairly-border">
+            {customers.map((c) => (
+              <div key={c.id} className="p-4 space-y-2.5 hover:bg-chairly-bg/30 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-chairly-panel border border-chairly-border flex items-center justify-center font-bold text-xs text-chairly-dark shrink-0">
+                      {c.firstName[0]}
+                      {c.lastName[0]}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-chairly-dark text-sm truncate">
+                        {c.firstName} {c.lastName}
+                      </p>
+                      <p className="text-xs text-chairly-muted truncate">{c.email}</p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-chairly-dark text-sm">
+                      {c.totalSpent.toLocaleString()} UZS
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-chairly-border/60">
+                  <div>
+                    <span className="text-chairly-muted block">Phone</span>
+                    <span className="font-medium text-chairly-dark">
+                      {c.phone || 'None'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-chairly-muted block">Bookings</span>
+                    <span className="font-medium text-chairly-dark">
+                      {c.completedBookings} completed {c.cancelledBookings > 0 && <span className="text-rose-500">({c.cancelledBookings} cancelled)</span>}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-chairly-muted flex items-center justify-between">
+                  <span>Last Visit: {format(new Date(c.lastBookingDate), 'MMM d, yyyy')}</span>
+                  <span className="font-semibold text-chairly-dark">{c.totalBookings} total bookings</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table (>= sm) */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-chairly-bg/50 border-b border-chairly-border text-[11px] uppercase tracking-wider text-chairly-muted font-semibold">
                 <tr>

@@ -423,7 +423,7 @@ export const Staff: React.FC = () => {
               return (
                 <div
                   key={item.dayOfWeek}
-                  className={`p-3.5 flex items-center justify-between gap-4 transition-colors ${
+                  className={`p-3.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 transition-colors ${
                     item.isWorking ? 'bg-white' : 'bg-chairly-bg/40 opacity-70'
                   }`}
                 >

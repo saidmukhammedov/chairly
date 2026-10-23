@@ -42,3 +42,7 @@ prisma/*.db-journal
 
 # Binaries
 *.apk
+
+# Backups
+backups/
+
