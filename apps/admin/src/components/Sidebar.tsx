@@ -20,7 +20,7 @@ import { formatPhone } from '@chairly/shared';
 export const Sidebar: React.FC = () => {
   const { user, memberships, currentShopId, currentMembership, switchShop, logout } = useAuth();
   const { t } = useTranslation();
-  const isPlatformOwner = user?.email === 'admin@chairly.app' || (user?.role === 'OWNER' && user?.email === 'admin@chairly.app');
+  const isPlatformOwner = user?.role === 'OWNER';
 
   const navItems = [
     { label: t('nav.dashboard'), path: '/', icon: LayoutDashboard },

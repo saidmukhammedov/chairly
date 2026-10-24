@@ -43,7 +43,7 @@ interface ApplicationItem {
 export const Applications: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const isPlatformOwner = user?.email === 'admin@chairly.app';
+  const isPlatformOwner = user?.role === 'OWNER';
 
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [counts, setCounts] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });

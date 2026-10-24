@@ -94,8 +94,8 @@ router.post('/login', validateBody(LoginSchema), async (req: Request, res: Respo
       role: m.role,
     }));
 
-    // If website platform super-admin/owner, grant access to all active shops
-    if (user.email === 'admin@chairly.app') {
+    // If website platform super-admin/owner (role OWNER in database), grant access to all active shops
+    if (user.role === 'OWNER') {
       const allShops = await prisma.shop.findMany({
         where: { isActive: true },
         select: { id: true, name: true },
@@ -155,8 +155,8 @@ router.get('/me', authenticate, async (req: Request, res: Response, next) => {
       role: m.role,
     }));
 
-    // If website platform super-admin/owner, grant access to all active shops
-    if (user.email === 'admin@chairly.app') {
+    // If website platform super-admin/owner (role OWNER in database), grant access to all active shops
+    if (user.role === 'OWNER') {
       const allShops = await prisma.shop.findMany({
         where: { isActive: true },
         select: { id: true, name: true },

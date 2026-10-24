@@ -1,6 +1,28 @@
 // src/server/app.ts
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+
+// src/server/config/index.ts
+import dotenv from "dotenv";
+dotenv.config();
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`[config] Missing required environment variable: ${name}. Set it in your .env or provider environment variables.`);
+  }
+  return value;
+}
+var config = {
+  port: parseInt(process.env.PORT || "4000", 10),
+  nodeEnv: process.env.NODE_ENV || "production",
+  corsOrigin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim()) : ["https://chairly.uz", "https://www.chairly.uz", "http://localhost:5173", "http://localhost:3000"],
+  databaseUrl: requireEnv("DATABASE_URL"),
+  jwtSecret: requireEnv("JWT_SECRET"),
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  defaultTimezone: process.env.DEFAULT_TIMEZONE || "Asia/Tashkent",
+  defaultCurrency: process.env.DEFAULT_CURRENCY || "UZS"
+};
 
 // src/server/middlewares/errorHandler.ts
 import { ZodError } from "zod";
@@ -50,22 +72,6 @@ import jwt2 from "jsonwebtoken";
 
 // src/server/db.ts
 import { PrismaClient } from "@prisma/client";
-
-// src/server/config/index.ts
-import dotenv from "dotenv";
-dotenv.config();
-var config = {
-  port: parseInt(process.env.PORT || "4000", 10),
-  nodeEnv: process.env.NODE_ENV || "production",
-  corsOrigin: process.env.CORS_ORIGIN || "*",
-  databaseUrl: process.env.DATABASE_URL || "postgresql://postgres.nfkqblsxatrntkdmsppi:Akbarali001%21@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres?schema=public",
-  jwtSecret: process.env.JWT_SECRET || "chairly_production_jwt_secret_key_98372619472938",
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  defaultTimezone: process.env.DEFAULT_TIMEZONE || "Asia/Tashkent",
-  defaultCurrency: process.env.DEFAULT_CURRENCY || "UZS"
-};
-
-// src/server/db.ts
 var globalForPrisma = globalThis;
 var prisma = globalForPrisma.prisma ?? new PrismaClient({
   datasources: {
@@ -123,7 +129,11 @@ var requireShopMember = (allowedRoles = ["OWNER", "MANAGER", "BARBER"]) => {
       if (!shopId) {
         throw new AppError("Shop ID is required for shop operations", 400);
       }
-      if (req.user.email === "admin@chairly.app") {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+        select: { id: true, role: true }
+      });
+      if (user?.role === "OWNER") {
         req.shopMembership = {
           shopId,
           role: "OWNER"
@@ -160,7 +170,7 @@ var requirePlatformOwner = async (req, _res, next) => {
       where: { id: req.user.userId },
       select: { id: true, email: true, role: true }
     });
-    if (!user || user.role !== "OWNER" || user.email !== "admin@chairly.app") {
+    if (!user || user.role !== "OWNER") {
       throw new AppError("Platform Owner access required for this action", 403);
     }
     next();
@@ -507,7 +517,7 @@ router.post("/login", validateBody(LoginSchema), async (req, res, next) => {
       shopName: m.shop.name,
       role: m.role
     }));
-    if (user.email === "admin@chairly.app" || user.role === "OWNER" && user.email === "admin@chairly.app") {
+    if (user.role === "OWNER") {
       const allShops = await prisma.shop.findMany({
         where: { isActive: true },
         select: { id: true, name: true },
@@ -562,7 +572,7 @@ router.get("/me", authenticate, async (req, res, next) => {
       shopName: m.shop.name,
       role: m.role
     }));
-    if (user.email === "admin@chairly.app") {
+    if (user.role === "OWNER") {
       const allShops = await prisma.shop.findMany({
         where: { isActive: true },
         select: { id: true, name: true },
@@ -857,7 +867,11 @@ router2.put("/:id", authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    const isPlatformOwner = req.user.email === "admin@chairly.app";
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+    });
+    const isPlatformOwner = user?.role === "OWNER";
     if (!isPlatformOwner) {
       const membership = await prisma.shopMember.findUnique({
         where: { shopId_userId: { shopId: id, userId } }
@@ -908,7 +922,11 @@ router2.patch("/:id/status", authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
     const { isActive } = req.body;
-    const isPlatformOwner = req.user.email === "admin@chairly.app";
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { role: true }
+    });
+    const isPlatformOwner = user?.role === "OWNER";
     if (!isPlatformOwner) {
       const membership = await prisma.shopMember.findUnique({
         where: { shopId_userId: { shopId: id, userId: req.user.userId } }
@@ -2955,7 +2973,26 @@ var notifications_default = router11;
 
 // src/server/app.ts
 var app = express();
-app.use(cors({ origin: "*" }));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  })
+);
+var allowedOrigins = Array.isArray(config.corsOrigin) ? config.corsOrigin : [config.corsOrigin];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes("*") || allowedOrigins.includes(origin) || origin.endsWith(".chairly.uz") || origin.endsWith(".vercel.app") || origin.includes("localhost")) {
+        return callback(null, true);
+      }
+      callback(null, false);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 app.use(express.json());
 app.get(["/api/health", "/health"], (_req, res) => {
   res.json({
@@ -2980,7 +3017,14 @@ var app_default = app;
 
 // src/server/handler.ts
 function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  const origin = req.headers?.origin;
+  const allowed = Array.isArray(config.corsOrigin) ? config.corsOrigin : [config.corsOrigin];
+  if (origin && (allowed.includes("*") || allowed.includes(origin) || origin.endsWith(".chairly.uz") || origin.endsWith(".vercel.app") || origin.includes("localhost"))) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  } else if (allowed.includes("*")) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") {

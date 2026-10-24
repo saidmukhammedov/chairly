@@ -214,7 +214,11 @@ router.put('/:id', authenticate, async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
-    const isPlatformOwner = req.user!.email === 'admin@chairly.app';
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    const isPlatformOwner = user?.role === 'OWNER';
 
     if (!isPlatformOwner) {
       const membership = await prisma.shopMember.findUnique({
@@ -271,7 +275,11 @@ router.patch('/:id/status', authenticate, async (req: Request, res: Response, ne
   try {
     const { id } = req.params;
     const { isActive } = req.body;
-    const isPlatformOwner = req.user!.email === 'admin@chairly.app';
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.userId },
+      select: { role: true },
+    });
+    const isPlatformOwner = user?.role === 'OWNER';
 
     if (!isPlatformOwner) {
       const membership = await prisma.shopMember.findUnique({

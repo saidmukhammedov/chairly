@@ -8,9 +8,9 @@ services:
     startCommand: node apps/api/dist/index.js
     envVars:
       - key: DATABASE_URL
-        value: postgresql://postgres.nfkqblsxatrntkdmsppi:Akbarali001%21@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres?schema=public
+        sync: false
       - key: JWT_SECRET
-        value: chairly_production_jwt_secret_key_98372619472938
+        sync: false
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: DEFAULT_TIMEZONE
@@ -19,3 +19,5 @@ services:
         value: UZS
       - key: NODE_ENV
         value: production
+      - key: CORS_ORIGIN
+        value: https://chairly.uz,https://www.chairly.uz

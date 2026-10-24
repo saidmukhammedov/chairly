@@ -49,7 +49,7 @@ export const DashboardLayout: React.FC = () => {
     );
   }
 
-  const isPlatformOwner = user.email === 'admin@chairly.app' || (user.role === 'OWNER' && user.email === 'admin@chairly.app');
+  const isPlatformOwner = user.role === 'OWNER';
 
   // If staff/admin has no shop assigned and is not platform owner, show unassigned message
   if (!currentShopId && !isPlatformOwner) {

@@ -90,8 +90,13 @@ export const requireShopMember = (allowedRoles: ShopMemberRole[] = ['OWNER', 'MA
         throw new AppError('Shop ID is required for shop operations', 400);
       }
 
-      // If user is website platform super-admin/owner (every access), allow unrestricted access across all shops
-      if (req.user.email === 'admin@chairly.app') {
+      // If user is website platform super-admin/owner (role OWNER in database), allow unrestricted access across all shops
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+        select: { id: true, role: true },
+      });
+
+      if (user?.role === 'OWNER') {
         req.shopMembership = {
           shopId,
           role: 'OWNER',

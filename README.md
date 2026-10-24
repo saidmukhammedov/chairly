@@ -48,19 +48,15 @@ Chairly enforces strict concurrency guarantees during booking and rescheduling:
 
 ---
 
-## Seed Data & Demo Accounts
+## Local Development Seed Data
 
-All seeded accounts use password: **`chairly123`**
+For local development and testing only, seeded accounts use a development password configured in your local `.env`. Never use default passwords in production.
 
-| Role | Email | Details |
-| :--- | :--- | :--- |
-| **Customer** | `customer@chairly.app` | Default customer with upcoming and past bookings |
-| **Customer 2** | `diyor@example.com` | Second customer for multi-user booking tests |
-| **Shop 1 Owner** | `owner@chopchop.uz` | Owner of **Chop-Chop Tashkent** |
-| **Shop 1 Manager** | `manager@chopchop.uz` | Manager of **Chop-Chop Tashkent** |
-| **Shop 1 Barber** | `rustam@chopchop.uz` | Rustam Aliyev (Master Barber) |
-| **Shop 1 Barber** | `azamat@chopchop.uz` | Azamat Kadyrov (Fade Specialist) |
-| **Shop 2 Owner** | `owner@barberclub.uz` | Owner of **The Barber Club Mirabad** |
+| Role | Details |
+| :--- | :--- |
+| **Customer** | Default customer for multi-user booking tests |
+| **Shop Owner** | Shop owner / administrator |
+| **Shop Barber** | Barbers with service assignments |
 
 ### Seeded Barbershops
 1. **Chop-Chop Tashkent** (`chop-chop-tashkent`) — Mirzo Ulugbek District, Tashkent
@@ -117,7 +113,7 @@ npm run dev:api
 npm run dev:admin
 ```
 - Open browser at: `http://localhost:5173`
-- Sign in as `owner@chopchop.uz` or `manager@chopchop.uz` (password: `chairly123`)
+- Sign in with your development administrator or staff account
 
 #### Run Customer Mobile App (Expo Metro)
 ```bash
