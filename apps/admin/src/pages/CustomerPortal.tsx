@@ -1006,11 +1006,6 @@ export const CustomerPortal: React.FC = () => {
                       <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
                         4. {t('customer.selectTime')}
                       </label>
-                      {availableSlots.length > 0 && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-sm border border-zinc-200">
-                          iPhone g‘ildiragi bilan tanlang
-                        </span>
-                      )}
                     </div>
 
                     <IosTimeWheel

@@ -93,13 +93,39 @@ export async function getAvailableSlots(options: AvailabilityOptions): Promise<T
     },
   });
 
+  // Filter to barbers who actually work today
+  const workingBarbers = barbers.filter((b) => b.schedules[0]?.isWorking);
+  if (workingBarbers.length === 0) {
+    return [];
+  }
+
+  // Calculate actual working bounds for target barbers on this day
+  let earliestStart = shopCloseDate;
+  let latestEnd = shopOpenDate;
+
+  for (const b of workingBarbers) {
+    const s = b.schedules[0];
+    const bStart = combineDateAndTimeInTimezone(dateStr, s.startTime, shop.timezone);
+    const bEnd = combineDateAndTimeInTimezone(dateStr, s.endTime, shop.timezone);
+    if (isBefore(bStart, earliestStart)) earliestStart = bStart;
+    if (isAfter(bEnd, latestEnd)) latestEnd = bEnd;
+  }
+
+  // Clamp within shop hours
+  if (isBefore(earliestStart, shopOpenDate)) earliestStart = shopOpenDate;
+  if (isAfter(latestEnd, shopCloseDate)) latestEnd = shopCloseDate;
+
+  if (isAfter(earliestStart, latestEnd)) {
+    return [];
+  }
+
   // Fetch active appointments on this day for these barbers
   const existingAppointments = await prisma.appointment.findMany({
     where: {
       barberId: { in: eligibleBarberIds },
       status: { in: ACTIVE_APPOINTMENT_STATUSES as any },
-      startTime: { lte: shopCloseDate },
-      bufferEndTime: { gte: shopOpenDate },
+      startTime: { lte: latestEnd },
+      bufferEndTime: { gte: earliestStart },
     },
   });
 
@@ -114,15 +140,15 @@ export async function getAvailableSlots(options: AvailabilityOptions): Promise<T
 
   const resultSlots: TimeSlot[] = [];
 
-  let currentSlotStart = shopOpenDate;
+  let currentSlotStart = earliestStart;
 
-  while (isBefore(addMinutes(currentSlotStart, service.durationMinutes), shopCloseDate) ||
-         currentSlotStart.getTime() + service.durationMinutes * 60000 === shopCloseDate.getTime()) {
+  while (isBefore(addMinutes(currentSlotStart, service.durationMinutes), latestEnd) ||
+         currentSlotStart.getTime() + service.durationMinutes * 60000 === latestEnd.getTime()) {
     const slotServiceEnd = addMinutes(currentSlotStart, service.durationMinutes);
     const slotBufferEnd = addMinutes(currentSlotStart, totalSlotMinutes);
 
-    // If buffer exceeds shop close by a small amount, verify if allowed or limit to close
-    if (isAfter(slotServiceEnd, shopCloseDate)) {
+    // If service exceeds working hours, stop
+    if (isAfter(slotServiceEnd, latestEnd)) {
       break;
     }
 
@@ -131,21 +157,24 @@ export async function getAvailableSlots(options: AvailabilityOptions): Promise<T
 
     // Past time or within lead time check
     if (isBefore(currentSlotStart, minBookingTime)) {
-      // Slot in the past / too soon to book
       resultSlots.push({
         time: timeLabel,
         isoString,
+        startTime: isoString,
         available: false,
-        reason: 'Too late to book or in the past',
+        reason: "PAST",
       });
       currentSlotStart = addMinutes(currentSlotStart, slotIntervalMinutes);
       continue;
     }
 
-    // Check which barbers are available for this slot
-    let availableBarber: (typeof barbers)[0] | null = null;
+    // Check which barbers are on shift and available for this slot
+    let availableBarber: (typeof workingBarbers)[0] | null = null;
+    let anyBarberOnShift = false;
+    let anyBarberBooked = false;
+    let anyBarberInBreak = false;
 
-    for (const barber of barbers) {
+    for (const barber of workingBarbers) {
       const schedule = barber.schedules[0];
       if (!schedule || !schedule.isWorking) {
         continue;
@@ -159,6 +188,8 @@ export async function getAvailableSlots(options: AvailabilityOptions): Promise<T
         continue;
       }
 
+      anyBarberOnShift = true;
+
       // Check breaks
       const inBreak = barber.breaks.some((brk) => {
         const breakStart = combineDateAndTimeInTimezone(dateStr, brk.startTime, shop.timezone);
@@ -167,6 +198,7 @@ export async function getAvailableSlots(options: AvailabilityOptions): Promise<T
       });
 
       if (inBreak) {
+        anyBarberInBreak = true;
         continue;
       }
 
@@ -176,6 +208,7 @@ export async function getAvailableSlots(options: AvailabilityOptions): Promise<T
       });
 
       if (isBlocked) {
+        anyBarberBooked = true;
         continue;
       }
 
@@ -185,10 +218,19 @@ export async function getAvailableSlots(options: AvailabilityOptions): Promise<T
         return intervalsOverlap(currentSlotStart, slotBufferEnd, appt.startTime, appt.bufferEndTime);
       });
 
-      if (!hasConflict) {
-        availableBarber = barber;
-        break; // Found an available barber
+      if (hasConflict) {
+        anyBarberBooked = true;
+        continue;
       }
+
+      // Barber is free!
+      availableBarber = barber;
+      break;
+    }
+
+    if (!anyBarberOnShift) {
+      currentSlotStart = addMinutes(currentSlotStart, slotIntervalMinutes);
+      continue;
     }
 
     if (availableBarber) {
@@ -200,13 +242,21 @@ export async function getAvailableSlots(options: AvailabilityOptions): Promise<T
         barberId: availableBarber.id,
         barberName: availableBarber.name,
       });
-    } else {
+    } else if (anyBarberBooked) {
       resultSlots.push({
         time: timeLabel,
         isoString,
         startTime: isoString,
         available: false,
-        reason: 'Barber is booked or unavailable',
+        reason: 'BOOKED',
+      });
+    } else if (anyBarberInBreak) {
+      resultSlots.push({
+        time: timeLabel,
+        isoString,
+        startTime: isoString,
+        available: false,
+        reason: 'BREAK',
       });
     }
 

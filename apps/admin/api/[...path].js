@@ -1575,12 +1575,30 @@ async function getAvailableSlots(options) {
       }
     }
   });
+  const workingBarbers = barbers.filter((b) => b.schedules[0]?.isWorking);
+  if (workingBarbers.length === 0) {
+    return [];
+  }
+  let earliestStart = shopCloseDate;
+  let latestEnd = shopOpenDate;
+  for (const b of workingBarbers) {
+    const s = b.schedules[0];
+    const bStart = combineDateAndTimeInTimezone(dateStr, s.startTime, shop.timezone);
+    const bEnd = combineDateAndTimeInTimezone(dateStr, s.endTime, shop.timezone);
+    if (isBefore2(bStart, earliestStart)) earliestStart = bStart;
+    if (isAfter2(bEnd, latestEnd)) latestEnd = bEnd;
+  }
+  if (isBefore2(earliestStart, shopOpenDate)) earliestStart = shopOpenDate;
+  if (isAfter2(latestEnd, shopCloseDate)) latestEnd = shopCloseDate;
+  if (isAfter2(earliestStart, latestEnd)) {
+    return [];
+  }
   const existingAppointments = await prisma.appointment.findMany({
     where: {
       barberId: { in: eligibleBarberIds },
       status: { in: ACTIVE_APPOINTMENT_STATUSES },
-      startTime: { lte: shopCloseDate },
-      bufferEndTime: { gte: shopOpenDate }
+      startTime: { lte: latestEnd },
+      bufferEndTime: { gte: earliestStart }
     }
   });
   const now = /* @__PURE__ */ new Date();
@@ -1588,11 +1606,11 @@ async function getAvailableSlots(options) {
   const totalSlotMinutes = service.durationMinutes + service.bufferMinutes;
   const slotIntervalMinutes = 15;
   const resultSlots = [];
-  let currentSlotStart = shopOpenDate;
-  while (isBefore2(addMinutes2(currentSlotStart, service.durationMinutes), shopCloseDate) || currentSlotStart.getTime() + service.durationMinutes * 6e4 === shopCloseDate.getTime()) {
+  let currentSlotStart = earliestStart;
+  while (isBefore2(addMinutes2(currentSlotStart, service.durationMinutes), latestEnd) || currentSlotStart.getTime() + service.durationMinutes * 6e4 === latestEnd.getTime()) {
     const slotServiceEnd = addMinutes2(currentSlotStart, service.durationMinutes);
     const slotBufferEnd = addMinutes2(currentSlotStart, totalSlotMinutes);
-    if (isAfter2(slotServiceEnd, shopCloseDate)) {
+    if (isAfter2(slotServiceEnd, latestEnd)) {
       break;
     }
     const timeLabel = formatTimeInTimezone(currentSlotStart, shop.timezone);
@@ -1603,13 +1621,16 @@ async function getAvailableSlots(options) {
         isoString,
         startTime: isoString,
         available: false,
-        reason: "O'tib ketgan vaqt yoki bron qilish muddati cheklangan"
+        reason: "PAST"
       });
       currentSlotStart = addMinutes2(currentSlotStart, slotIntervalMinutes);
       continue;
     }
     let availableBarber = null;
-    for (const barber of barbers) {
+    let anyBarberOnShift = false;
+    let anyBarberBooked = false;
+    let anyBarberInBreak = false;
+    for (const barber of workingBarbers) {
       const schedule = barber.schedules[0];
       if (!schedule || !schedule.isWorking) {
         continue;
@@ -1619,28 +1640,37 @@ async function getAvailableSlots(options) {
       if (isBefore2(currentSlotStart, barberStart) || isAfter2(slotBufferEnd, barberEnd)) {
         continue;
       }
+      anyBarberOnShift = true;
       const inBreak = barber.breaks.some((brk) => {
         const breakStart = combineDateAndTimeInTimezone(dateStr, brk.startTime, shop.timezone);
         const breakEnd = combineDateAndTimeInTimezone(dateStr, brk.endTime, shop.timezone);
         return intervalsOverlap(currentSlotStart, slotBufferEnd, breakStart, breakEnd);
       });
       if (inBreak) {
+        anyBarberInBreak = true;
         continue;
       }
       const isBlocked = barber.blockedTimes.some((blk) => {
         return intervalsOverlap(currentSlotStart, slotBufferEnd, blk.startTime, blk.endTime);
       });
       if (isBlocked) {
+        anyBarberBooked = true;
         continue;
       }
       const hasConflict = existingAppointments.some((appt) => {
         if (appt.barberId !== barber.id) return false;
         return intervalsOverlap(currentSlotStart, slotBufferEnd, appt.startTime, appt.bufferEndTime);
       });
-      if (!hasConflict) {
-        availableBarber = barber;
-        break;
+      if (hasConflict) {
+        anyBarberBooked = true;
+        continue;
       }
+      availableBarber = barber;
+      break;
+    }
+    if (!anyBarberOnShift) {
+      currentSlotStart = addMinutes2(currentSlotStart, slotIntervalMinutes);
+      continue;
     }
     if (availableBarber) {
       resultSlots.push({
@@ -1651,13 +1681,21 @@ async function getAvailableSlots(options) {
         barberId: availableBarber.id,
         barberName: availableBarber.name
       });
-    } else {
+    } else if (anyBarberBooked) {
       resultSlots.push({
         time: timeLabel,
         isoString,
         startTime: isoString,
         available: false,
-        reason: "Barber is booked or unavailable"
+        reason: "BOOKED"
+      });
+    } else if (anyBarberInBreak) {
+      resultSlots.push({
+        time: timeLabel,
+        isoString,
+        startTime: isoString,
+        available: false,
+        reason: "BREAK"
       });
     }
     currentSlotStart = addMinutes2(currentSlotStart, slotIntervalMinutes);
