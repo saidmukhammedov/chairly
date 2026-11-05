@@ -29,6 +29,7 @@ import { useTranslation } from '../i18n';
 import { LanguageSelector } from '../i18n/LanguageSelector';
 import { NotificationsBell } from '../components/NotificationsBell';
 import { IosTimeWheel } from '../components/IosTimeWheel';
+import { Footer } from '../components/Footer';
 import { formatPhone } from '@chairly/shared';
 
 interface Shop {
@@ -540,28 +541,6 @@ export const CustomerPortal: React.FC = () => {
               </div>
             </div>
 
-            {/* Sleek Dark Barbershop Partner Invitation Banner */}
-            <div className="bg-zinc-950 text-white border border-zinc-800 rounded-lg p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-              <div className="space-y-1">
-                <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-400 font-semibold block">
-                  Chairly Partner Network
-                </span>
-                <h3 className="text-sm sm:text-base font-bold text-white">
-                  {t('portal.partnerBannerTitle')}
-                </h3>
-                <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
-                  {t('portal.partnerBannerDesc')}
-                </p>
-              </div>
-              <Link
-                to="/apply"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-zinc-200 text-black text-xs font-bold rounded-md transition-colors shrink-0 self-start sm:self-auto shadow-2xs"
-              >
-                {t('portal.applyPartnerButton')}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
             {/* Shop Cards Grid */}
             {isLoadingShops ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
@@ -671,6 +650,31 @@ export const CustomerPortal: React.FC = () => {
                 ))}
               </div>
             )}
+
+            {/* Sleek Dark Barbershop Partner Invitation Banner (Placed at the bottom of the Explore page, right above the Footer) */}
+            <div className="bg-zinc-950 text-white border border-zinc-800 rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-md mt-10">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 font-bold block">
+                    Chairly Partner Network
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                  {t('portal.partnerBannerTitle')}
+                </h3>
+                <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
+                  {t('portal.partnerBannerDesc')}
+                </p>
+              </div>
+              <Link
+                to="/apply"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-xs font-bold rounded-lg transition-all shrink-0 self-start sm:self-auto shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {t('portal.applyPartnerButton')}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         )}
 
@@ -821,6 +825,9 @@ export const CustomerPortal: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Modern High-End Standard Footer */}
+      <Footer />
 
       {/* RAZOR-SHARP MODERN BOOKING MODAL */}
       {selectedShop && (

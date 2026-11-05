@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Footer } from '../components/Footer';
 import {
   Building2,
   User,
@@ -118,8 +119,9 @@ export const ApplyBusiness: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-zinc-950 py-8 px-4 sm:px-6 lg:px-8">
-      {/* Top Navbar */}
+    <div className="min-h-screen bg-[#FAFAFA] text-zinc-950 flex flex-col justify-between antialiased">
+      <div className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+        {/* Top Navbar */}
       <div className="max-w-4xl mx-auto flex items-center justify-between mb-8 pb-4 border-b border-zinc-200/80">
         <div className="flex items-center gap-4">
           <Link
@@ -494,6 +496,8 @@ export const ApplyBusiness: React.FC = () => {
           )}
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };
