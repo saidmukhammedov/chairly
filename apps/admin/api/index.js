@@ -57,6 +57,13 @@ var errorHandler = (err, _req, res, _next) => {
       error: err.message || "Slot is no longer available"
     });
   }
+  if (err?.name === "PrismaClientInitializationError" || err?.code === "P1001" || err?.message?.includes("Can't reach database server")) {
+    console.error("[Database Connection Error]:", err.message || err);
+    return res.status(503).json({
+      error: "Ma'lumotlar bazasiga ulanib bo'lmadi. Supabase loyihasi to'xtatilgan (paused) bo'lishi mumkin. Iltimos, Supabase panelida 'Restore project' tugmasini bosing yoki ulanish sozlamalarini tekshiring.",
+      code: "DATABASE_UNAVAILABLE"
+    });
+  }
   console.error("[API Error]:", err);
   const isProd = process.env.NODE_ENV === "production";
   return res.status(err.statusCode || 500).json({
